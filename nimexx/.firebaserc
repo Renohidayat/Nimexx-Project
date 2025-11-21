@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "nimexxx-77c82"
+  },
+  "targets": {
+    "nimexxx-77c82": {
+      "hosting": {
+        "nimexx": [
+          "nimexx"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

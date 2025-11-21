@@ -1,0 +1,113 @@
+{
+  "project_info": {
+    "project_number": "853090632109",
+    "project_id": "nimexxx-77c82",
+    "storage_bucket": "nimexxx-77c82.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:853090632109:android:89e0310d717160ed556124",
+        "android_client_info": {
+          "package_name": "com.example.nimexx"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "853090632109-ssnil1on3jmgnbh7cu5i7sj65dhmcahk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8I7KJ9yyerIwQ-LxhPevRQt-XZ5MX7NE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "853090632109-ssnil1on3jmgnbh7cu5i7sj65dhmcahk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:853090632109:android:a3d5fe77d7e6871c556124",
+        "android_client_info": {
+          "package_name": "com.rennv.nimexx"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "853090632109-v44gi2fes76tstplgij2i5eocev3m7ge.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rennv.nimexx",
+            "certificate_hash": "1f61db1904e08b6b07aed72b81adb39a9d8b1b36"
+          }
+        },
+        {
+          "client_id": "853090632109-ssnil1on3jmgnbh7cu5i7sj65dhmcahk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8I7KJ9yyerIwQ-LxhPevRQt-XZ5MX7NE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "853090632109-ssnil1on3jmgnbh7cu5i7sj65dhmcahk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:853090632109:android:56c4228b579ff9ab556124",
+        "android_client_info": {
+          "package_name": "com.rennv.nimexxv2"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "853090632109-drm636cuq713unhbajeomdeaj7ubs372.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rennv.nimexxv2",
+            "certificate_hash": "1f61db1904e08b6b07aed72b81adb39a9d8b1b36"
+          }
+        },
+        {
+          "client_id": "853090632109-ssnil1on3jmgnbh7cu5i7sj65dhmcahk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8I7KJ9yyerIwQ-LxhPevRQt-XZ5MX7NE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "853090632109-ssnil1on3jmgnbh7cu5i7sj65dhmcahk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
