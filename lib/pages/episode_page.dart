@@ -260,7 +260,12 @@ class _EpisodePageState extends State<EpisodePage>
     );
 
     try {
-      final response = await AnimeService().get(apiUrl);
+      final response = await AnimeService().get(
+        apiUrl,
+        maxRetries: 5,
+        timeout: const Duration(seconds: 3),
+        retryDelayMs: 300,
+      );
       if (response.statusCode != 200) {
         ModernSnackBarHelper.showSnackBar(
           context,
