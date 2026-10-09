@@ -17,6 +17,10 @@ class AnimeService {
   AnimeService({String? baseUrl})
     : baseUrl = baseUrl ?? RemoteConfigService.baseUrl;
 
+  Future<http.Response> get(Uri uri, {int maxRetries = 3}) {
+    return _getWithRetry(uri, maxRetries: maxRetries);
+  }
+
   Future<http.Response> _getWithRetry(Uri uri, {int maxRetries = 3}) async {
     int attempts = 0;
     while (attempts < maxRetries) {
