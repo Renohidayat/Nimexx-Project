@@ -93,6 +93,7 @@ class ModernLoadingScreens {
     String error, {
     int selectedIndex = 0,
     Function(int)? onMenuSelected,
+    VoidCallback? onRetry,
   }) {
     Widget errorContent = Center(
       child: Container(
@@ -131,9 +132,7 @@ class ModernLoadingScreens {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: () {
-                // Implementasi retry logic di sini
-              },
+              onPressed: onRetry ?? () {},
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red[400],
                 foregroundColor: Colors.white,

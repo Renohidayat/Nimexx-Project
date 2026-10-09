@@ -157,6 +157,23 @@ class _AnimeListPageState extends State<AnimeListPage> {
               onMenuSelected: _handleMenuSelected,
             );
           }
+          // Jika terjadi error saat fetch (termasuk timeout)
+          else if (snapshot.hasError) {
+            return ModernLoadingScreens.buildErrorScreen(
+              snapshot.error.toString(),
+              selectedIndex: _selectedIndex,
+              onMenuSelected: _handleMenuSelected,
+              onRetry: () {
+                setState(() {
+                  _animeListFuture = AnimeService().fetchAnimeList().then((data) {
+                    _animeList = data;
+                    _filteredAnimeList = data;
+                    return data;
+                  });
+                });
+              },
+            );
+          }
           // Jika tidak ada data
           else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return ModernLoadingScreens.buildNoDataScreen(
