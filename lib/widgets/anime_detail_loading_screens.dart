@@ -71,7 +71,7 @@ class ModernLoadingScreens {
     );
   }
 
-  static Widget buildErrorScreen(String error) {
+  static Widget buildErrorScreen(String error, {VoidCallback? onRetry}) {
     return Center(
       child: Container(
         margin: const EdgeInsets.all(24),
@@ -106,6 +106,25 @@ class ModernLoadingScreens {
               error,
               style: GoogleFonts.poppins(fontSize: 14, color: Colors.white70),
               textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: onRetry ?? () {},
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red[400],
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+              child: Text(
+                'Coba Lagi',
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+              ),
             ),
           ],
         ),

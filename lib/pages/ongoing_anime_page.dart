@@ -129,6 +129,19 @@ class _OngoingAnimePageState extends State<OngoingAnimePage> {
               onMenuSelected: _handleMenuSelected,
             );
           }
+          // Jika terjadi error
+          else if (snapshot.hasError) {
+            return ModernLoadingScreens.buildErrorScreen(
+              snapshot.error.toString(),
+              selectedIndex: _selectedIndex,
+              onMenuSelected: _handleMenuSelected,
+              onRetry: () {
+                setState(() {
+                  _future = AnimeService().fetchOngoingAnime(1);
+                });
+              },
+            );
+          }
           // Jika tidak ada data
           else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return ModernLoadingScreens.buildNoDataScreen(

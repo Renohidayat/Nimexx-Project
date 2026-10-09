@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:http/http.dart' as http;
 import '../model/ongoing_anime.dart';
 import '../model/anime_detail.dart';
@@ -16,8 +17,30 @@ class AnimeService {
   AnimeService({String? baseUrl})
     : baseUrl = baseUrl ?? RemoteConfigService.baseUrl;
 
+  Future<http.Response> _getWithRetry(Uri uri, {int maxRetries = 3}) async {
+    int attempts = 0;
+    while (attempts < maxRetries) {
+      try {
+        final res = await http.get(uri).timeout(const Duration(seconds: 10));
+        // Return immediately if successful or client error (4xx) 
+        // Retrying only makes sense for timeouts, network errors, or 5xx server errors
+        if (res.statusCode < 500) {
+          return res;
+        }
+      } catch (e) {
+        if (attempts >= maxRetries - 1) {
+          rethrow;
+        }
+      }
+      attempts++;
+      // Wait before retrying (exponential backoff: 2s, 4s)
+      await Future.delayed(Duration(seconds: 2 * attempts));
+    }
+    throw Exception('Failed to fetch data after $maxRetries attempts');
+  }
+
   Future<List<GenreModel>> fetchGenres() async {
-    final res = await http.get(Uri.parse('$baseUrl/genres'));
+    final res = await _getWithRetry(Uri.parse('$baseUrl/genres'));
 
     if (res.statusCode != 200) {
       throw Exception('HTTP ${res.statusCode}');
@@ -38,7 +61,7 @@ class AnimeService {
     final url = '$baseUrl/genres/$endpoint/$page';
     print('➡️ GET $url');
 
-    final res = await http.get(Uri.parse(url));
+    final res = await _getWithRetry(Uri.parse(url));
 
     if (res.statusCode != 200) {
       throw Exception('HTTP ${res.statusCode}');
@@ -56,7 +79,7 @@ class AnimeService {
 
   Future<List<SearchAnimeItem>> searchAnime(String query) async {
     final uri = Uri.parse('$baseUrl/search/${Uri.encodeComponent(query)}');
-    final res = await http.get(uri);
+    final res = await _getWithRetry(uri);
 
     if (res.statusCode != 200) {
       throw Exception('Failed to search');
@@ -78,7 +101,7 @@ class AnimeService {
 
   // Fetch jadwal rilis anime ongoing
   Future<List<ReleaseSchedule>> fetchSchedule() async {
-    final response = await http.get(Uri.parse('$baseUrl/ongoing/1'));
+    final response = await _getWithRetry(Uri.parse('$baseUrl/ongoing/1'));
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -91,7 +114,7 @@ class AnimeService {
 
   // Fetch daftar anime umum
   Future<List<AnimeListItem>> fetchAnimeList() async {
-    final response = await http.get(Uri.parse('$baseUrl/anime-list'));
+    final response = await _getWithRetry(Uri.parse('$baseUrl/anime-list'));
 
     if (response.statusCode == 200) {
       final jsonData = jsonDecode(response.body);
@@ -104,7 +127,7 @@ class AnimeService {
 
   // Fetch ongoing anime by page
   Future<List<OngoingAnime>> fetchOngoingAnime(int page) async {
-    final response = await http.get(Uri.parse('$baseUrl/ongoing/$page'));
+    final response = await _getWithRetry(Uri.parse('$baseUrl/ongoing/$page'));
 
     if (response.statusCode == 200) {
       final jsonData = jsonDecode(response.body);
@@ -117,7 +140,7 @@ class AnimeService {
 
   // Fetch completed anime by page
   Future<List<OngoingAnime>> fetchCompletedAnime(int page) async {
-    final response = await http.get(Uri.parse('$baseUrl/completed/$page'));
+    final response = await _getWithRetry(Uri.parse('$baseUrl/completed/$page'));
 
     if (response.statusCode == 200) {
       final jsonData = jsonDecode(response.body);
@@ -131,7 +154,7 @@ class AnimeService {
   // Fetch detail anime by endpoint
   Future<AnimeDetail> fetchAnimeDetail(String endpoint) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/detail/$endpoint'));
+      final response = await _getWithRetry(Uri.parse('$baseUrl/detail/$endpoint'));
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
@@ -160,7 +183,7 @@ class AnimeService {
   // Fetch episode detail dan ekstrak real streaming link
   Future<EpisodeDetail> fetchEpisodeDetail(String endpoint) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/episode/$endpoint'));
+      final response = await _getWithRetry(Uri.parse('$baseUrl/episode/$endpoint'));
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
@@ -204,7 +227,7 @@ class AnimeService {
   Future<String?> _fetchRealVideoUrl(String apiStreamingLink) async {
     try {
       final fullUrl = '$baseUrl$apiStreamingLink';
-      final response = await http.get(Uri.parse(fullUrl));
+      final response = await _getWithRetry(Uri.parse(fullUrl));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);

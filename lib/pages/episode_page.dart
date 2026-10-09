@@ -122,6 +122,15 @@ class _EpisodePageState extends State<EpisodePage>
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return ModernLoadingScreens.buildLoadingScreen();
+                  } else if (snapshot.hasError) {
+                    return ModernLoadingScreens.buildErrorScreen(
+                      snapshot.error.toString(),
+                      onRetry: () {
+                        setState(() {
+                          _episodeDetail = AnimeService().fetchEpisodeDetail(widget.endpoint);
+                        });
+                      },
+                    );
                   } else if (!snapshot.hasData) {
                     return ModernLoadingScreens.buildNoDataScreen();
                   }
