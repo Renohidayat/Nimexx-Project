@@ -254,17 +254,67 @@ class _EpisodePageState extends State<EpisodePage>
     final cleanPath = apiPath.replaceFirst(RegExp(r'^/api/v1'), '');
     final apiUrl = Uri.parse('${RemoteConfigService.baseUrl}$cleanPath');
 
-    ModernSnackBarHelper.showSnackBar(
-      context,
-      'Menghubungkan ke server resolusi, mohon tunggu...',
+    // Tampilkan Dialog Loading dengan Timer
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return StreamBuilder<int>(
+              stream: Stream.periodic(const Duration(seconds: 1), (i) => i + 1),
+              builder: (context, snapshot) {
+                final seconds = snapshot.data ?? 0;
+                return Dialog(
+                  backgroundColor: cardBackground,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(color: const Color(0xFFFF6B35).withOpacity(0.5)),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const CircularProgressIndicator(
+                          color: Color(0xFFFF6B35),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Menghubungkan ke server...',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Mohon tunggu ($seconds detik)',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white60,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
     );
 
     try {
-      // API sering hang dan user harus double click. Kita atasi dengan mengirim 3 request paralel
-      // dan mengambil yang tercepat berhasil (Future.any).
       final futures = List.generate(3, (index) => _raceApiRequest(apiUrl));
       final response = await Future.any(futures);
       
+      // Tutup dialog
+      if (mounted) Navigator.pop(context);
+
       if (response.statusCode != 200) {
         ModernSnackBarHelper.showSnackBar(
           context,
@@ -291,7 +341,7 @@ class _EpisodePageState extends State<EpisodePage>
         episodeTitle: widget.episodeTitle,
         animeTitle: widget.animeTitle,
         thumbUrl: widget.thumbUrl,
-        animeEndpoint: widget.animeEndpoint ?? '', // ✅ Tambahkan ini
+        animeEndpoint: widget.animeEndpoint ?? '',
       );
 
       await _loadWatchedEpisodes();
@@ -321,6 +371,7 @@ class _EpisodePageState extends State<EpisodePage>
         );
       }
     } catch (e) {
+      if (mounted) Navigator.pop(context); // Tutup dialog jika error
       ModernSnackBarHelper.showSnackBar(
         context,
         'Terjadi kesalahan saat membuka link: $e',
