@@ -490,23 +490,8 @@ class _CommentSectionState extends State<CommentSection>
         color:
             isHighlighted
                 ? const Color(0xFFFF6B35).withOpacity(0.1)
-                : const Color(0xFF1A1A1A),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color:
-              isHighlighted
-                  ? const Color(0xFFFF6B35).withOpacity(0.5)
-                  : const Color(0xFF2A2A2A),
-          width: isHighlighted ? 2 : 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            spreadRadius: 1,
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
+                : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
         padding: EdgeInsets.all(screenWidth < 360 ? 12 : 16),
@@ -817,7 +802,7 @@ class _CommentSectionState extends State<CommentSection>
           vertical: screenWidth < 360 ? 4 : 6,
         ),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
