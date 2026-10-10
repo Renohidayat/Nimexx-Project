@@ -486,10 +486,7 @@ class _CommentSectionState extends State<CommentSection>
     return Container(
       key: key,
       margin: EdgeInsets.only(
-        left:
-            isReply
-                ? (screenWidth < 360 ? 24 : 32)
-                : (screenWidth < 360 ? 12 : 16),
+        left: isReply ? 0 : (screenWidth < 360 ? 12 : 16),
         right: screenWidth < 360 ? 12 : 16,
         bottom: screenWidth < 360 ? 8 : 12,
       ),
@@ -497,23 +494,8 @@ class _CommentSectionState extends State<CommentSection>
         color:
             isHighlighted
                 ? const Color(0xFFFF6B35).withOpacity(0.1)
-                : const Color(0xFF1A1A1A),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color:
-              isHighlighted
-                  ? const Color(0xFFFF6B35).withOpacity(0.5)
-                  : const Color(0xFF2A2A2A),
-          width: isHighlighted ? 2 : 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            spreadRadius: 1,
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
+                : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
         padding: EdgeInsets.all(screenWidth < 360 ? 12 : 16),
@@ -622,7 +604,7 @@ class _CommentSectionState extends State<CommentSection>
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: screenWidth < 360 ? 80 : 100),
       child: TextField(
-        controller: _editController..text = originalContent,
+        controller: _editController,
         autofocus: true,
         maxLines: null,
         style: GoogleFonts.poppins(
@@ -824,7 +806,7 @@ class _CommentSectionState extends State<CommentSection>
           vertical: screenWidth < 360 ? 4 : 6,
         ),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -903,14 +885,36 @@ class _CommentSectionState extends State<CommentSection>
         ),
         if (isExpanded) ...[
           SizedBox(height: screenWidth < 360 ? 8 : 12),
-          ...replies.map(
-            (reply) => _buildCommentItem(
-              reply['id'],
-              reply['data'],
-              [],
-              currentUser,
-              screenWidth,
-              isReply: true,
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  margin: EdgeInsets.only(
+                    left: screenWidth < 360 ? 12 : 16,
+                    right: screenWidth < 360 ? 8 : 12,
+                  ),
+                  width: 2,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2A2A2A),
+                    borderRadius: BorderRadius.circular(1),
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    children: replies.map(
+                      (reply) => _buildCommentItem(
+                        reply['id'],
+                        reply['data'],
+                        [],
+                        currentUser,
+                        screenWidth,
+                        isReply: true,
+                      ),
+                    ).toList(),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

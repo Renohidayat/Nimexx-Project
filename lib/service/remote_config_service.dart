@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart'; // untuk kIsWeb
 import 'dart:convert';
 
 class RemoteConfigService {
-  static String _baseUrl = 'http://localhost:8000/api/v1'; // Default fallback
+  static String _baseUrl = 'http://192.168.100.228:8000/api/v1'; // Default fallback
 
   static String get baseUrl => _baseUrl;
 

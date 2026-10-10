@@ -122,6 +122,15 @@ class _EpisodePageState extends State<EpisodePage>
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return ModernLoadingScreens.buildLoadingScreen();
+                  } else if (snapshot.hasError) {
+                    return ModernLoadingScreens.buildErrorScreen(
+                      snapshot.error.toString(),
+                      onRetry: () {
+                        setState(() {
+                          _episodeDetail = AnimeService().fetchEpisodeDetail(widget.endpoint);
+                        });
+                      },
+                    );
                   } else if (!snapshot.hasData) {
                     return ModernLoadingScreens.buildNoDataScreen();
                   }
@@ -245,8 +254,17 @@ class _EpisodePageState extends State<EpisodePage>
     final cleanPath = apiPath.replaceFirst(RegExp(r'^/api/v1'), '');
     final apiUrl = Uri.parse('${RemoteConfigService.baseUrl}$cleanPath');
 
+    ModernSnackBarHelper.showSnackBar(
+      context,
+      'Menghubungkan ke server resolusi, mohon tunggu...',
+    );
+
     try {
-      final response = await http.get(apiUrl);
+      // API sering hang dan user harus double click. Kita atasi dengan mengirim 3 request paralel
+      // dan mengambil yang tercepat berhasil (Future.any).
+      final futures = List.generate(3, (index) => _raceApiRequest(apiUrl));
+      final response = await Future.any(futures);
+      
       if (response.statusCode != 200) {
         ModernSnackBarHelper.showSnackBar(
           context,
@@ -309,6 +327,17 @@ class _EpisodePageState extends State<EpisodePage>
         isError: true,
       );
     }
+  }
+
+  Future<http.Response> _raceApiRequest(Uri apiUrl) async {
+    for (int i = 0; i < 10; i++) {
+      try {
+        final res = await http.get(apiUrl).timeout(const Duration(milliseconds: 1500));
+        if (res.statusCode == 200) return res;
+      } catch (_) {}
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+    return http.Response('Error', 500);
   }
 
   String? _findFirstStreamingUrl(EpisodeDetail episode) {
