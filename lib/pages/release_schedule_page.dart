@@ -100,7 +100,18 @@ class _ReleaseSchedulePageState extends State<ReleaseSchedulePage> {
               onMenuSelected: _handleMenuSelected,
             );
           }
-          // Handle error state
+          else if (snapshot.hasError) {
+            return ModernLoadingScreens.buildErrorScreen(
+              snapshot.error.toString(),
+              selectedIndex: _selectedIndex,
+              onMenuSelected: _handleMenuSelected,
+              onRetry: () {
+                setState(() {
+                  _futureSchedule = _service.fetchSchedule();
+                });
+              },
+            );
+          }
           // Jika tidak ada data
           else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return ModernLoadingScreens.buildNoDataScreen(
