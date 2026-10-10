@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
+import 'edit_profile_page.dart';
 
 import '../service/auth_service.dart';
 
@@ -52,13 +54,11 @@ class _ProfilePageState extends State<ProfilePage>
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-
-    String? optimizedPhotoUrl;
-    if (user?.photoURL != null) {
-      optimizedPhotoUrl =
-          user!.photoURL!.contains('?')
-              ? user.photoURL
-              : "${user.photoURL}?sz=256";
+    if (user == null) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF0A0A0A),
+        body: Center(child: Text("Not logged in", style: TextStyle(color: Colors.white))),
+      );
     }
 
     return Scaffold(
@@ -76,77 +76,93 @@ class _ProfilePageState extends State<ProfilePage>
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: Container(
-        width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF1A0A0A), Color(0xFF0A0A0A)],
-          ),
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: FadeTransition(
-            opacity: _fadeController,
-            child: Column(
-              children: [
-                const SizedBox(height: 20),
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator(color: Color(0xFFFF6B35)));
+          }
 
-                // Profile Header with Animated Picture
-                SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, -0.3),
-                    end: Offset.zero,
-                  ).animate(
-                    CurvedAnimation(
-                      parent: _slideController,
-                      curve: Curves.easeOutCubic,
-                    ),
-                  ),
-                  child: _buildProfileHeader(optimizedPhotoUrl, user),
-                ),
+          final userData = snapshot.data!.data() as Map<String, dynamic>? ?? {};
+          
+          String? photoUrl = userData['photoUrl'] ?? user.photoURL;
+          String? optimizedPhotoUrl;
+          if (photoUrl != null) {
+            optimizedPhotoUrl = photoUrl.contains('?') ? photoUrl : "$photoUrl?sz=256";
+          }
 
-                const SizedBox(height: 50),
-
-                // Profile Information Cards
-                SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, 0.3),
-                    end: Offset.zero,
-                  ).animate(
-                    CurvedAnimation(
-                      parent: _slideController,
-                      curve: Curves.easeOutCubic,
-                    ),
-                  ),
-                  child: _buildProfileInfo(user),
-                ),
-
-                const SizedBox(height: 40),
-
-                // Action Buttons
-                SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, 0.5),
-                    end: Offset.zero,
-                  ).animate(
-                    CurvedAnimation(
-                      parent: _slideController,
-                      curve: Curves.easeOutCubic,
-                    ),
-                  ),
-                  child: _buildActionButtons(context),
-                ),
-              ],
+          String displayName = userData['displayName'] ?? user.displayName ?? 'Otaku';
+          String username = userData['username'] ?? '';
+          String bio = userData['bio'] ?? '';
+          
+          return Container(
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFF1A0A0A), Color(0xFF0A0A0A)],
+              ),
             ),
-          ),
-        ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: FadeTransition(
+                opacity: _fadeController,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 20),
+                    // Profile Header with Animated Picture
+                    SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0, -0.3),
+                        end: Offset.zero,
+                      ).animate(
+                        CurvedAnimation(
+                          parent: _slideController,
+                          curve: Curves.easeOutCubic,
+                        ),
+                      ),
+                      child: _buildProfileHeader(optimizedPhotoUrl, displayName, user.email ?? 'email@example.com'),
+                    ),
+                    const SizedBox(height: 50),
+                    // Profile Information Cards
+                    SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0, 0.3),
+                        end: Offset.zero,
+                      ).animate(
+                        CurvedAnimation(
+                          parent: _slideController,
+                          curve: Curves.easeOutCubic,
+                        ),
+                      ),
+                      child: _buildProfileInfo(displayName, username, bio, user.email),
+                    ),
+                    const SizedBox(height: 40),
+                    // Action Buttons
+                    SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0, 0.5),
+                        end: Offset.zero,
+                      ).animate(
+                        CurvedAnimation(
+                          parent: _slideController,
+                          curve: Curves.easeOutCubic,
+                        ),
+                      ),
+                      child: _buildActionButtons(context),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
       ),
     );
   }
 
-  Widget _buildProfileHeader(String? photoUrl, User? user) {
+  Widget _buildProfileHeader(String? photoUrl, String displayName, String email) {
     return Column(
       children: [
         // Animated Profile Picture
@@ -250,7 +266,7 @@ class _ProfilePageState extends State<ProfilePage>
 
         // User Name
         Text(
-          user?.displayName ?? 'Otaku',
+          displayName,
           style: GoogleFonts.poppins(
             fontSize: 28,
             fontWeight: FontWeight.bold,
@@ -274,7 +290,7 @@ class _ProfilePageState extends State<ProfilePage>
             ),
           ),
           child: Text(
-            user?.email ?? 'email@example.com',
+            email,
             style: GoogleFonts.poppins(
               fontSize: 14,
               color: const Color(0xFFB0B0B0),
@@ -285,27 +301,34 @@ class _ProfilePageState extends State<ProfilePage>
     );
   }
 
-  Widget _buildProfileInfo(User? user) {
+  Widget _buildProfileInfo(String displayName, String username, String bio, String? email) {
     return Column(
       children: [
         _buildInfoCard(
           icon: Icons.person_outline_rounded,
           title: 'Display Name',
-          value: user?.displayName ?? 'Not Set',
+          value: displayName,
+        ),
+        const SizedBox(height: 16),
+        _buildInfoCard(
+          icon: Icons.alternate_email,
+          title: 'Username',
+          value: username.isNotEmpty ? '@$username' : 'Belum diatur',
         ),
         const SizedBox(height: 16),
         _buildInfoCard(
           icon: Icons.email_outlined,
           title: 'Email Address',
-          value: user?.email ?? 'No Email',
+          value: email ?? 'No Email',
         ),
-        const SizedBox(height: 16),
-        _buildInfoCard(
-          icon: Icons.verified_outlined,
-          title: 'Account Status',
-          value: user?.emailVerified == true ? 'Verified' : 'Unverified',
-          isVerified: user?.emailVerified,
-        ),
+        if (bio.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          _buildInfoCard(
+            icon: Icons.info_outline,
+            title: 'Bio',
+            value: bio,
+          ),
+        ]
       ],
     );
   }
@@ -406,6 +429,55 @@ class _ProfilePageState extends State<ProfilePage>
   Widget _buildActionButtons(BuildContext context) {
     return Column(
       children: [
+        // Edit Profile Button
+        Container(
+          width: double.infinity,
+          height: 56,
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFF6B35), Color(0xFFE55D28)],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFFF6B35).withOpacity(0.3),
+                spreadRadius: 1,
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const EditProfilePage()),
+              );
+            },
+            icon: const Icon(
+              Icons.edit,
+              color: Colors.white,
+              size: 20,
+            ),
+            label: Text(
+              'Edit Profil',
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              shadowColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+        ),
+        
         // Logout Button
         Container(
           width: double.infinity,
