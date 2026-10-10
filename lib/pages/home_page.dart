@@ -317,57 +317,105 @@ class _MobileHeaderState extends State<_MobileHeader>
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    final photoUrl = user?.photoURL;
-    final userName = user?.displayName ?? 'Pengguna';
     final greeting = getGreeting();
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          // 👉 Avatar Profil
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ProfilePage()),
-              );
-            },
-            child: CircleAvatar(
+    if (user == null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            const CircleAvatar(
               radius: 20,
-              backgroundImage:
-                  photoUrl != null
-                      ? NetworkImage(photoUrl)
-                      : const AssetImage('assets/images/default_profile.png')
-                          as ImageProvider,
+              backgroundImage: AssetImage('assets/images/default_profile.png'),
             ),
-          ),
-          const SizedBox(width: 12),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    greeting,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w300,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  const Text(
+                    'Pengguna',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
-          // 👉 Sapaan dan Nama
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  greeting,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w300,
-                    color: Colors.white70,
-                  ),
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
+      builder: (context, snapshot) {
+        String? photoUrl = user.photoURL;
+        String userName = user.displayName ?? 'Pengguna';
+
+        if (snapshot.hasData && snapshot.data!.data() != null) {
+          final userData = snapshot.data!.data() as Map<String, dynamic>;
+          photoUrl = userData['photoUrl'] ?? photoUrl;
+          userName = userData['displayName'] ?? userName;
+        }
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              // 👉 Avatar Profil
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProfilePage()),
+                  );
+                },
+                child: CircleAvatar(
+                  radius: 20,
+                  backgroundImage:
+                      photoUrl != null
+                          ? NetworkImage(photoUrl)
+                          : const AssetImage('assets/images/default_profile.png')
+                              as ImageProvider,
                 ),
-                Text(
-                  userName,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+              ),
+              const SizedBox(width: 12),
+
+              // 👉 Sapaan dan Nama
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      greeting,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w300,
+                        color: Colors.white70,
+                      ),
+                    ),
+                    Text(
+                      userName,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
 
           // 🔽 Toggle Tombol Aksi "<"
           _buildIcon(
