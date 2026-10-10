@@ -45,9 +45,13 @@ class _CommentSectionState extends State<CommentSection>
   String? editingId;
   Map<String, bool> expandedReplies = {};
 
+  late Stream<QuerySnapshot<Map<String, dynamic>>> _commentsStream;
+
   @override
   void initState() {
     super.initState();
+
+    _commentsStream = widget.commentService.getComments(widget.episodeId);
 
     _slideController = AnimationController(
       duration: const Duration(milliseconds: 300),
@@ -360,7 +364,7 @@ class _CommentSectionState extends State<CommentSection>
 
   Widget _buildCommentsStream(User? currentUser, double screenWidth) {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: widget.commentService.getComments(widget.episodeId),
+      stream: _commentsStream,
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return Container(
