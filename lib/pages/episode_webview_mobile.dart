@@ -85,7 +85,16 @@ class _EpisodeWebViewState extends State<EpisodeWebView> {
 
   void _loadUrl(String url) {
     try {
-      final uri = Uri.parse(url);
+      // Ekstrak src jika url adalah tag iframe HTML
+      String finalUrl = url;
+      if (url.toLowerCase().contains('<iframe')) {
+        final match = RegExp(r'src="([^"]+)"').firstMatch(url);
+        if (match != null) {
+          finalUrl = match.group(1)!;
+        }
+      }
+
+      final uri = Uri.parse(finalUrl);
       if (uri.scheme.startsWith('http')) {
         _controller.loadRequest(uri);
       } else {

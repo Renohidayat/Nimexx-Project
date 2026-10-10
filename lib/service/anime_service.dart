@@ -247,8 +247,9 @@ class AnimeService {
   // Fetch detail anime by endpoint
   Future<AnimeDetail> fetchAnimeDetail(String endpoint) async {
     try {
+      final safeEndpoint = Uri.encodeComponent(Uri.decodeComponent(endpoint));
       final response =
-          await _getWithRetry(Uri.parse('$baseUrl/detail/$endpoint'));
+          await _getWithRetry(Uri.parse('$baseUrl/detail/$safeEndpoint'));
 
       if (response.statusCode != 200) {
         throw Exception('Failed to load anime detail: ${response.statusCode}');
@@ -271,7 +272,8 @@ class AnimeService {
     } catch (e) {
       debugPrint('Error in fetchAnimeDetail: $e');
       if (Hive.isBoxOpen('api_cache')) {
-        final cacheKey = Uri.parse('$baseUrl/detail/$endpoint').toString();
+        final safeEndpoint = Uri.encodeComponent(Uri.decodeComponent(endpoint));
+        final cacheKey = Uri.parse('$baseUrl/detail/$safeEndpoint').toString();
         _cacheBox.delete(cacheKey);
         debugPrint('🗑️ [CACHE DELETED] $cacheKey (Karena data kosong/error)');
       }
@@ -282,8 +284,9 @@ class AnimeService {
   // Fetch episode detail dan ekstrak real streaming link
   Future<EpisodeDetail> fetchEpisodeDetail(String endpoint) async {
     try {
+      final safeEndpoint = Uri.encodeComponent(Uri.decodeComponent(endpoint));
       final response =
-          await _getWithRetry(Uri.parse('$baseUrl/episode/$endpoint'));
+          await _getWithRetry(Uri.parse('$baseUrl/episode/$safeEndpoint'));
 
       if (response.statusCode != 200) {
         throw Exception(
