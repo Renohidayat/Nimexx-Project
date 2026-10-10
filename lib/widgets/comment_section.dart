@@ -126,7 +126,7 @@ class _CommentSectionState extends State<CommentSection>
         color: const Color(0xFF1A1A1A),
         border: Border(
           bottom: BorderSide(
-            color: const Color(0xFFDC143C).withOpacity(0.2),
+            color: const Color(0xFFFF6B35).withOpacity(0.2),
             width: 1,
           ),
         ),
@@ -136,12 +136,12 @@ class _CommentSectionState extends State<CommentSection>
           Container(
             padding: EdgeInsets.all(screenWidth < 360 ? 6 : 8),
             decoration: BoxDecoration(
-              color: const Color(0xFFDC143C).withOpacity(0.1),
+              color: const Color(0xFFFF6B35).withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               Icons.chat_bubble_outline_rounded,
-              color: const Color(0xFFDC143C),
+              color: const Color(0xFFFF6B35),
               size: screenWidth < 360 ? 18 : 20,
             ),
           ),
@@ -180,10 +180,10 @@ class _CommentSectionState extends State<CommentSection>
         ),
         padding: EdgeInsets.all(screenWidth < 360 ? 10 : 12),
         decoration: BoxDecoration(
-          color: const Color(0xFFDC143C).withOpacity(0.1),
+          color: const Color(0xFFFF6B35).withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: const Color(0xFFDC143C).withOpacity(0.3),
+            color: const Color(0xFFFF6B35).withOpacity(0.3),
             width: 1,
           ),
         ),
@@ -191,7 +191,7 @@ class _CommentSectionState extends State<CommentSection>
           children: [
             Icon(
               Icons.reply_rounded,
-              color: const Color(0xFFDC143C),
+              color: const Color(0xFFFF6B35),
               size: screenWidth < 360 ? 14 : 16,
             ),
             SizedBox(width: screenWidth < 360 ? 6 : 8),
@@ -199,7 +199,7 @@ class _CommentSectionState extends State<CommentSection>
               child: Text(
                 'Membalas @${replyingToUsername!}',
                 style: GoogleFonts.poppins(
-                  color: const Color(0xFFDC143C),
+                  color: const Color(0xFFFF6B35),
                   fontSize: screenWidth < 360 ? 12 : 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -213,7 +213,7 @@ class _CommentSectionState extends State<CommentSection>
                 padding: EdgeInsets.zero,
                 icon: Icon(
                   Icons.close_rounded,
-                  color: const Color(0xFFDC143C),
+                  color: const Color(0xFFFF6B35),
                   size: screenWidth < 360 ? 16 : 18,
                 ),
                 onPressed: () {
@@ -306,7 +306,7 @@ class _CommentSectionState extends State<CommentSection>
               width: screenWidth < 360 ? 36 : 40,
               height: screenWidth < 360 ? 36 : 40,
               decoration: BoxDecoration(
-                color: const Color(0xFFDC143C),
+                color: const Color(0xFFFF6B35),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: IconButton(
@@ -367,7 +367,7 @@ class _CommentSectionState extends State<CommentSection>
             padding: EdgeInsets.all(screenWidth < 360 ? 30 : 40),
             child: const Center(
               child: CircularProgressIndicator(
-                color: Color(0xFFDC143C),
+                color: Color(0xFFFF6B35),
                 strokeWidth: 2,
               ),
             ),
@@ -482,23 +482,20 @@ class _CommentSectionState extends State<CommentSection>
     return Container(
       key: key,
       margin: EdgeInsets.only(
-        left:
-            isReply
-                ? (screenWidth < 360 ? 24 : 32)
-                : (screenWidth < 360 ? 12 : 16),
+        left: isReply ? 0 : (screenWidth < 360 ? 12 : 16),
         right: screenWidth < 360 ? 12 : 16,
         bottom: screenWidth < 360 ? 8 : 12,
       ),
       decoration: BoxDecoration(
         color:
             isHighlighted
-                ? const Color(0xFFDC143C).withOpacity(0.1)
+                ? const Color(0xFFFF6B35).withOpacity(0.1)
                 : const Color(0xFF1A1A1A),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color:
               isHighlighted
-                  ? const Color(0xFFDC143C).withOpacity(0.5)
+                  ? const Color(0xFFFF6B35).withOpacity(0.5)
                   : const Color(0xFF2A2A2A),
           width: isHighlighted ? 2 : 1,
         ),
@@ -560,7 +557,7 @@ class _CommentSectionState extends State<CommentSection>
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: const Color(0xFFDC143C).withOpacity(0.3),
+          color: const Color(0xFFFF6B35).withOpacity(0.3),
           width: 1,
         ),
       ),
@@ -579,7 +576,7 @@ class _CommentSectionState extends State<CommentSection>
                         color: const Color(0xFF2A2A2A),
                         child: Center(
                           child: CircularProgressIndicator(
-                            color: const Color(0xFFDC143C),
+                            color: const Color(0xFFFF6B35),
                             strokeWidth: 1,
                           ),
                         ),
@@ -592,7 +589,7 @@ class _CommentSectionState extends State<CommentSection>
                         child: Icon(
                           Icons.person_rounded,
                           size: radius,
-                          color: const Color(0xFFDC143C),
+                          color: const Color(0xFFFF6B35),
                         ),
                       ),
                 )
@@ -603,7 +600,7 @@ class _CommentSectionState extends State<CommentSection>
                   child: Icon(
                     Icons.person_rounded,
                     size: radius,
-                    color: const Color(0xFFDC143C),
+                    color: const Color(0xFFFF6B35),
                   ),
                 ),
       ),
@@ -618,7 +615,7 @@ class _CommentSectionState extends State<CommentSection>
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: screenWidth < 360 ? 80 : 100),
       child: TextField(
-        controller: _editController..text = originalContent,
+        controller: _editController,
         autofocus: true,
         maxLines: null,
         style: GoogleFonts.poppins(
@@ -719,7 +716,7 @@ class _CommentSectionState extends State<CommentSection>
               '@$username',
               style: GoogleFonts.poppins(
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFFDC143C),
+                color: const Color(0xFFFF6B35),
                 fontSize: screenWidth < 360 ? 12 : 14,
               ),
             ),
@@ -868,7 +865,7 @@ class _CommentSectionState extends State<CommentSection>
               vertical: screenWidth < 360 ? 4 : 6,
             ),
             decoration: BoxDecoration(
-              color: const Color(0xFFDC143C).withOpacity(0.1),
+              color: const Color(0xFFFF6B35).withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -876,7 +873,7 @@ class _CommentSectionState extends State<CommentSection>
               children: [
                 Icon(
                   isExpanded ? Icons.expand_less : Icons.expand_more,
-                  color: const Color(0xFFDC143C),
+                  color: const Color(0xFFFF6B35),
                   size: screenWidth < 360 ? 16 : 20,
                 ),
                 SizedBox(width: screenWidth < 360 ? 4 : 8),
@@ -887,7 +884,7 @@ class _CommentSectionState extends State<CommentSection>
                         : 'Lihat ${replies.length} balasan',
                     style: GoogleFonts.poppins(
                       fontSize: screenWidth < 360 ? 12 : 14,
-                      color: const Color(0xFFDC143C),
+                      color: const Color(0xFFFF6B35),
                       fontWeight: FontWeight.w500,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -899,14 +896,36 @@ class _CommentSectionState extends State<CommentSection>
         ),
         if (isExpanded) ...[
           SizedBox(height: screenWidth < 360 ? 8 : 12),
-          ...replies.map(
-            (reply) => _buildCommentItem(
-              reply['id'],
-              reply['data'],
-              [],
-              currentUser,
-              screenWidth,
-              isReply: true,
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  margin: EdgeInsets.only(
+                    left: screenWidth < 360 ? 12 : 16,
+                    right: screenWidth < 360 ? 8 : 12,
+                  ),
+                  width: 2,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2A2A2A),
+                    borderRadius: BorderRadius.circular(1),
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    children: replies.map(
+                      (reply) => _buildCommentItem(
+                        reply['id'],
+                        reply['data'],
+                        [],
+                        currentUser,
+                        screenWidth,
+                        isReply: true,
+                      ),
+                    ).toList(),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -934,7 +953,7 @@ class _CommentSectionState extends State<CommentSection>
             'Komentar telah dilaporkan',
             style: GoogleFonts.poppins(fontSize: 12),
           ),
-          backgroundColor: const Color(0xFFDC143C),
+          backgroundColor: const Color(0xFFFF6B35),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           margin: EdgeInsets.symmetric(
