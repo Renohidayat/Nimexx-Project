@@ -6,11 +6,13 @@ import '../../model/episode_detail.dart';
 class ModernQualitySection extends StatefulWidget {
   final EpisodeDetail episode;
   final Function(String) onStreamButtonPressed;
+  final bool isFetchingStream;
 
   const ModernQualitySection({
     super.key,
     required this.episode,
     required this.onStreamButtonPressed,
+    this.isFetchingStream = false,
   });
 
   @override
@@ -246,11 +248,20 @@ class _ModernQualitySectionState extends State<ModernQualitySection> {
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(
-                    Icons.play_arrow,
-                    color: Colors.white,
-                    size: 20,
-                  ),
+                  child: widget.isFetchingStream
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Icon(
+                          Icons.play_arrow,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -258,7 +269,7 @@ class _ModernQualitySectionState extends State<ModernQualitySection> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        link.driver,
+                        widget.isFetchingStream ? 'Mengambil Server...' : link.driver,
                         style: GoogleFonts.poppins(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

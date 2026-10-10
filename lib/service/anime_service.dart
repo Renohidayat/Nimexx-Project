@@ -17,11 +17,11 @@ class AnimeService {
   AnimeService({String? baseUrl})
     : baseUrl = baseUrl ?? RemoteConfigService.baseUrl;
 
-  Future<http.Response> get(Uri uri, {int maxRetries = 3, Duration timeout = const Duration(seconds: 10), int retryDelayMs = 2000}) {
+  Future<http.Response> get(Uri uri, {int maxRetries = 5, Duration timeout = const Duration(seconds: 3), int retryDelayMs = 300}) {
     return _getWithRetry(uri, maxRetries: maxRetries, timeout: timeout, retryDelayMs: retryDelayMs);
   }
 
-  Future<http.Response> _getWithRetry(Uri uri, {int maxRetries = 3, Duration timeout = const Duration(seconds: 10), int retryDelayMs = 2000}) async {
+  Future<http.Response> _getWithRetry(Uri uri, {int maxRetries = 5, Duration timeout = const Duration(seconds: 3), int retryDelayMs = 300}) async {
     int attempts = 0;
     while (attempts < maxRetries) {
       try {
