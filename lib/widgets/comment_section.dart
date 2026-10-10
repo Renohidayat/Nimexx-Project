@@ -96,27 +96,15 @@ class _CommentSectionState extends State<CommentSection>
     final currentUser = FirebaseAuth.instance.currentUser;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    return FadeTransition(
-      opacity: _fadeController,
-      child: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF0A0A0A), Color(0xFF1A1A1A)],
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionHeader(screenWidth),
-            _buildReplyInfo(screenWidth),
-            _buildInputField(currentUser, screenWidth),
-            SizedBox(height: screenWidth < 360 ? 12 : 20),
-            _buildCommentsStream(currentUser, screenWidth),
-          ],
-        ),
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(screenWidth),
+        _buildReplyInfo(screenWidth),
+        _buildInputField(currentUser, screenWidth),
+        SizedBox(height: screenWidth < 360 ? 12 : 20),
+        _buildCommentsStream(currentUser, screenWidth),
+      ],
     );
   }
 

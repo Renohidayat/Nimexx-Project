@@ -83,11 +83,11 @@ class CommentService {
     }
   }
 
-  /// Mengambil semua komentar untuk satu episode
+  /// Mengambil semua komentar untuk satu episode (dilimit 50 untuk performa)
   Stream<QuerySnapshot<Map<String, dynamic>>> getComments(String episodeId) {
     return _commentCollection(
       episodeId,
-    ).orderBy('timestamp', descending: false).snapshots();
+    ).orderBy('timestamp', descending: false).limit(50).snapshots();
   }
 
   /// Mengedit komentar (hanya jika milik user)
