@@ -20,7 +20,7 @@ class _NotificationPageState extends State<NotificationPage>
   bool _isDeleting = false; // Tambah loading state untuk delete operations
 
   // Konstanta untuk mengurangi magic numbers
-  static const Color _primaryColor = Color(0xFFDC143C);
+  static const Color _primaryColor = Color(0xFFFF6B35);
   static const Color _backgroundColor = Color(0xFF0A0A0A);
   static const Color _cardColor = Color(0xFF1A1A1A);
   static const Color _borderColor = Color(0xFF2A2A2A);
