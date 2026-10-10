@@ -83,6 +83,15 @@ class _AnimeDetailMobileState extends State<AnimeDetailMobile> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return ModernLoadingScreens.buildLoadingScreen();
+          } else if (snapshot.hasError) {
+            return ModernLoadingScreens.buildErrorScreen(
+              snapshot.error.toString(),
+              onRetry: () {
+                setState(() {
+                  _animeDetail = AnimeService().fetchAnimeDetail(widget.endpoint);
+                });
+              },
+            );
           } else if (!snapshot.hasData) {
             return ModernLoadingScreens.buildNoDataScreen();
           }
