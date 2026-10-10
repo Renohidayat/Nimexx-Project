@@ -254,8 +254,18 @@ class _EpisodePageState extends State<EpisodePage>
     final cleanPath = apiPath.replaceFirst(RegExp(r'^/api/v1'), '');
     final apiUrl = Uri.parse('${RemoteConfigService.baseUrl}$cleanPath');
 
+    ModernSnackBarHelper.showSnackBar(
+      context,
+      'Menghubungkan ke server resolusi, mohon tunggu...',
+    );
+
     try {
-      final response = await http.get(apiUrl);
+      final response = await AnimeService().get(
+        apiUrl,
+        maxRetries: 5,
+        timeout: const Duration(seconds: 3),
+        retryDelayMs: 300,
+      );
       if (response.statusCode != 200) {
         ModernSnackBarHelper.showSnackBar(
           context,

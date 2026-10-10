@@ -17,11 +17,15 @@ class AnimeService {
   AnimeService({String? baseUrl})
     : baseUrl = baseUrl ?? RemoteConfigService.baseUrl;
 
-  Future<http.Response> _getWithRetry(Uri uri, {int maxRetries = 3}) async {
+  Future<http.Response> get(Uri uri, {int maxRetries = 3, Duration timeout = const Duration(seconds: 10), int retryDelayMs = 2000}) {
+    return _getWithRetry(uri, maxRetries: maxRetries, timeout: timeout, retryDelayMs: retryDelayMs);
+  }
+
+  Future<http.Response> _getWithRetry(Uri uri, {int maxRetries = 3, Duration timeout = const Duration(seconds: 10), int retryDelayMs = 2000}) async {
     int attempts = 0;
     while (attempts < maxRetries) {
       try {
-        final res = await http.get(uri).timeout(const Duration(seconds: 10));
+        final res = await http.get(uri).timeout(timeout);
         // Return immediately if successful or client error (4xx) 
         // Retrying only makes sense for timeouts, network errors, or 5xx server errors
         if (res.statusCode < 500) {
@@ -33,8 +37,8 @@ class AnimeService {
         }
       }
       attempts++;
-      // Wait before retrying (exponential backoff: 2s, 4s)
-      await Future.delayed(Duration(seconds: 2 * attempts));
+      // Wait before retrying (exponential backoff)
+      await Future.delayed(Duration(milliseconds: retryDelayMs * attempts));
     }
     throw Exception('Failed to fetch data after $maxRetries attempts');
   }
