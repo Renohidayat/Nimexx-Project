@@ -305,7 +305,7 @@ class _ProfileWebPageState extends State<ProfileWebPage>
 
         // User Name
         Text(
-          user?.displayName ?? 'Otaku',
+          displayName,
           style: GoogleFonts.poppins(
             fontSize: 32,
             fontWeight: FontWeight.bold,
@@ -328,7 +328,7 @@ class _ProfileWebPageState extends State<ProfileWebPage>
             ),
           ),
           child: Text(
-            user?.email ?? 'email@example.com',
+            email,
             style: GoogleFonts.poppins(
               fontSize: 14,
               color: const Color(0xFFB0B0B0),

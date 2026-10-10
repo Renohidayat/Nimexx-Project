@@ -5,8 +5,8 @@ import 'package:flutter/foundation.dart';
 
 class CloudinaryService {
   // TODO: UBAH CLOUD NAME DAN UPLOAD PRESET INI SESUAI DENGAN AKUN CLOUDINARY ANDA
-  static const String cloudName = 'dhvwthnxq'; // Ganti dengan cloud name Anda (contoh: dhvwthnxq)
-  static const String uploadPreset = 'nimexx_preset'; // Ganti dengan upload preset Anda (harus disetting Unsigned di Cloudinary)
+  static const String cloudName = 'upg6pew9'; // Ganti dengan cloud name Anda (contoh: dhvwthnxq)
+  static const String uploadPreset = 'ml_default'; // Ganti dengan upload preset Anda (harus disetting Unsigned di Cloudinary)
 
   static Future<String?> uploadImage(File imageFile) async {
     try {
