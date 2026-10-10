@@ -48,7 +48,7 @@ class EpisodePage extends StatefulWidget {
 
 class _EpisodePageState extends State<EpisodePage>
     with TickerProviderStateMixin {
-  late final Future<EpisodeDetail> _episodeDetail;
+  late Future<EpisodeDetail> _episodeDetail;
   Future<AnimeDetail>? _animeDetail;
   String? _streamingUrlMobile;
   String? _highlightCommentId;
