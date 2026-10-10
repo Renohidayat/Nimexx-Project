@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'firebase_options.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:intl/date_symbol_data_local.dart';
 import 'service/remote_config_service.dart';
 import 'auth_wrapper.dart';
+import 'service/messaging_service.dart'; // Import fitur notifikasi
 import 'pages/login_web_page.dart';
 import 'pages/home_page.dart';
 import 'pages/genre_list_page.dart';
@@ -29,9 +31,16 @@ import 'widgets/maintenance_dialog.dart'; // Import file maintenance yang baru
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // ✅ Inisialisasi Hive untuk Caching
+  await Hive.initFlutter();
+  await Hive.openBox('api_cache');
+
   // ✅ Inisialisasi Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await RemoteConfigService.init();
+
+  // ✅ Inisialisasi Firebase Cloud Messaging & Berlangganan Topik
+  await MessagingService.init();
 
   // ✅ Persist login
   await _setFirebasePersistence();
@@ -91,6 +100,7 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.dark,
         scaffoldBackgroundColor: Colors.black,
       ),
+      navigatorKey: MessagingService.navigatorKey, // Kunci rahasia untuk routing dari background
       initialRoute: '/',
       onGenerateRoute: (settings) {
         final isLoggedIn = FirebaseAuth.instance.currentUser != null;

@@ -28,6 +28,7 @@ class _AnimeDetailMobileState extends State<AnimeDetailMobile> {
 
   bool _isAscending = true; // Tambahkan ini di atas initState
   bool _isSaved = false;
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -145,7 +146,7 @@ class _AnimeDetailMobileState extends State<AnimeDetailMobile> {
               SafeArea(
                 child: Column(
                   children: [
-                    _buildHeader(context),
+                    _buildHeader(context, anime.title, imageUrl),
                     Expanded(
                       child: ListView(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -171,7 +172,7 @@ class _AnimeDetailMobileState extends State<AnimeDetailMobile> {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, String title, String imageUrl) {
     return Padding(
       padding: const EdgeInsets.all(12),
       child: Row(
@@ -191,6 +192,13 @@ class _AnimeDetailMobileState extends State<AnimeDetailMobile> {
               ),
               overflow: TextOverflow.ellipsis,
             ),
+          ),
+          IconButton(
+            icon: Icon(
+              _isSaved ? Icons.bookmark : Icons.bookmark_border,
+              color: _isSaved ? const Color.fromARGB(255, 255, 0, 0) : Colors.white,
+            ),
+            onPressed: () => _toggleFavorite(title, imageUrl),
           ),
         ],
       ),
@@ -339,8 +347,30 @@ class _AnimeDetailMobileState extends State<AnimeDetailMobile> {
     );
   }
 
+  String _formatEpisodeTitle(String fullTitle) {
+    if (fullTitle.toLowerCase().contains('batch')) return 'Batch';
+    if (fullTitle.toLowerCase().contains('ova')) return 'OVA';
+    if (fullTitle.toLowerCase().contains('movie')) return 'Movie';
+    
+    final match = RegExp(r'Episode\s*([\d\.\-]+)', caseSensitive: false).firstMatch(fullTitle);
+    if (match != null) {
+      return 'Episode ${match.group(1)}';
+    }
+    return fullTitle; // Fallback jika format tidak dikenali
+  }
+
   Widget _buildEpisodes(AnimeDetail anime) {
     List<Episode> episodes = List.from(anime.episodes);
+    
+    // Filter pencarian
+    if (_searchQuery.isNotEmpty) {
+      episodes = episodes.where((ep) {
+        final formatted = _formatEpisodeTitle(ep.title).toLowerCase();
+        return formatted.contains(_searchQuery.toLowerCase()) || 
+               ep.title.toLowerCase().contains(_searchQuery.toLowerCase());
+      }).toList();
+    }
+
     if (!_isAscending) {
       episodes = episodes.reversed.toList();
     }
@@ -379,8 +409,36 @@ class _AnimeDetailMobileState extends State<AnimeDetailMobile> {
           ],
         ),
         const SizedBox(height: 8),
-        ...episodes.map(
-          (ep) => GestureDetector(
+        
+        // Kotak Pencarian Episode
+        TextField(
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            hintText: 'Cari episode (cth: 12)...',
+            hintStyle: const TextStyle(color: Colors.white54),
+            prefixIcon: const Icon(Icons.search, color: Colors.white54),
+            filled: true,
+            fillColor: Colors.white10,
+            contentPadding: const EdgeInsets.symmetric(vertical: 0),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide.none,
+            ),
+          ),
+          onChanged: (val) {
+            setState(() {
+              _searchQuery = val;
+            });
+          },
+        ),
+        const SizedBox(height: 16),
+
+        ...episodes.map((ep) {
+          final isBatch = ep.title.toLowerCase().contains('batch');
+          final formattedTitle = _formatEpisodeTitle(ep.title);
+          final isWatched = _watchedEpisodes.contains(ep.endpoint);
+
+          return GestureDetector(
             onTap: () async {
               await Navigator.push(
                 context,
@@ -388,7 +446,7 @@ class _AnimeDetailMobileState extends State<AnimeDetailMobile> {
                   builder:
                       (_) => EpisodePage(
                         endpoint: ep.endpoint,
-                        episodeTitle: ep.title,
+                        episodeTitle: ep.title, // Tetap kirim title penuh untuk EpisodePage
                         animeTitle: anime.title,
                         thumbUrl: anime.proxyThumb(_baseUrl),
                         animeEndpoint: widget.endpoint,
@@ -401,10 +459,9 @@ class _AnimeDetailMobileState extends State<AnimeDetailMobile> {
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color:
-                    _watchedEpisodes.contains(ep.endpoint)
-                        ? Colors.green
-                        : Colors.white10,
+                color: isBatch 
+                    ? Colors.orange.withOpacity(0.8) 
+                    : (isWatched ? Colors.green : Colors.white10),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -412,7 +469,7 @@ class _AnimeDetailMobileState extends State<AnimeDetailMobile> {
                 children: [
                   Expanded(
                     child: Text(
-                      ep.title,
+                      formattedTitle,
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -420,12 +477,15 @@ class _AnimeDetailMobileState extends State<AnimeDetailMobile> {
                       ),
                     ),
                   ),
-                  const Icon(Icons.play_arrow, color: Colors.white),
+                  Icon(
+                    isBatch ? Icons.folder_zip : Icons.play_arrow, 
+                    color: Colors.white
+                  ),
                 ],
               ),
             ),
-          ),
-        ),
+          );
+        }),
       ],
     );
   }

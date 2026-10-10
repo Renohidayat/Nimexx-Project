@@ -43,15 +43,23 @@ class _CompletedAnimePageState extends State<CompletedAnimePage> {
 
     setState(() => _busy = true);
 
-    _future = AnimeService()
-        .fetchCompletedAnime(p)
-        .then((list) => _cache[p] = list)
-        .whenComplete(() {
-          setState(() {
-            _page = p;
-            _busy = false;
-          });
+    final reqFuture = AnimeService().fetchCompletedAnime(p);
+    
+    // Assign synchronous
+    setState(() {
+      _future = reqFuture;
+    });
+
+    reqFuture.then((list) {
+      _cache[p] = list;
+    }).whenComplete(() {
+      if (mounted) {
+        setState(() {
+          _page = p;
+          _busy = false;
         });
+      }
+    });
   }
 
   void _handleMenuSelected(int index) {

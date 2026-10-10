@@ -362,14 +362,11 @@ class _EpisodePageState extends State<EpisodePage>
   }
 
   String? _findFirstStreamingUrl(EpisodeDetail episode) {
-    final allLinks = [
-      ...episode.mirror360p,
-      ...episode.mirror480p,
-      ...episode.mirror720p,
-    ];
-    if (allLinks.isNotEmpty) {
-      return 'http://192.168.100.228:8000${allLinks.first.link}';
+    if (episode.realStreamUrl != null && episode.realStreamUrl!.isNotEmpty) {
+      return episode.realStreamUrl;
     }
+    // Jika tidak ada URL streaming asli, kembalikan null
+    // Ini akan menyembunyikan video player sampai user memilih resolusi
     return null;
   }
 }

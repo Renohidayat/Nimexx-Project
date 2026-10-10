@@ -14,6 +14,7 @@ import '../widgets/web_app_bar.dart';
 import '../widgets/hero_banner.dart';
 import '../widgets/ongoing_anime_section.dart';
 import '../widgets/completed_anime_section.dart';
+import '../widgets/home_personal_section.dart';
 import '../widgets/footer_widget.dart';
 
 class BerandaTabWebOrMobile extends StatelessWidget {
@@ -111,6 +112,8 @@ class _BerandaTabWeb extends StatelessWidget {
             onSelected: (index) => _handleMenuSelected(context, index),
           ),
           const HeroBanner(),
+          const SizedBox(height: 16),
+          const HomePersonalSection(),
           const SizedBox(height: 16),
           const OngoingAnimeSection(),
           const SizedBox(height: 32),
@@ -259,6 +262,8 @@ class _BerandaTabMobileState extends State<_BerandaTabMobile>
               ),
             ),
             const SizedBox(height: 32),
+            const HomePersonalSection(),
+            const SizedBox(height: 16),
             const OngoingAnimeSection(),
             const SizedBox(height: 32),
             const CompletedAnimeSection(),
@@ -508,6 +513,8 @@ class _MobileHeaderState extends State<_MobileHeader>
         ],
       ),
     );
+  },
+);
   }
 
   // ✅ Wrapper icon dengan border dan padding bulat

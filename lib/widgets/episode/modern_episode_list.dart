@@ -32,6 +32,7 @@ class _ModernEpisodeListState extends State<ModernEpisodeList> {
   final ScrollController _scrollController = ScrollController();
   List<Episode> _cachedEpisodes = [];
   bool _isDataLoaded = false;
+  String _searchQuery = '';
 
   // Modern color scheme
   static const Color primaryOrange = Color(0xFFFF6B35);
@@ -93,6 +94,18 @@ class _ModernEpisodeListState extends State<ModernEpisodeList> {
         });
       }
     });
+  }
+
+  String _formatEpisodeTitle(String fullTitle) {
+    if (fullTitle.toLowerCase().contains('batch')) return 'Batch';
+    if (fullTitle.toLowerCase().contains('ova')) return 'OVA';
+    if (fullTitle.toLowerCase().contains('movie')) return 'Movie';
+    
+    final match = RegExp(r'Episode\s*([\d\.\-]+)', caseSensitive: false).firstMatch(fullTitle);
+    if (match != null) {
+      return 'Episode ${match.group(1)}';
+    }
+    return fullTitle;
   }
 
   @override
@@ -265,6 +278,30 @@ class _ModernEpisodeListState extends State<ModernEpisodeList> {
             children: [
               _buildSortControls(anime.episodes.length),
               const SizedBox(height: 16),
+              
+              // Kotak Pencarian Episode
+              TextField(
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Cari episode (cth: 12)...',
+                  hintStyle: const TextStyle(color: Colors.white54),
+                  prefixIcon: const Icon(Icons.search, color: Colors.white54),
+                  filled: true,
+                  fillColor: Colors.white10,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                onChanged: (val) {
+                  setState(() {
+                    _searchQuery = val;
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
+
               _buildEpisodeListView(anime.episodes),
             ],
           ),
@@ -341,18 +378,27 @@ class _ModernEpisodeListState extends State<ModernEpisodeList> {
     );
   }
 
-  Widget _buildEpisodeListView(List<Episode> episodes) {
+  Widget _buildEpisodeListView(List<Episode> allEpisodes) {
+    List<Episode> filtered = List.from(allEpisodes);
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where((ep) {
+        final formatted = _formatEpisodeTitle(ep.title).toLowerCase();
+        return formatted.contains(_searchQuery.toLowerCase()) || 
+               ep.title.toLowerCase().contains(_searchQuery.toLowerCase());
+      }).toList();
+    }
+
     return Container(
       constraints: const BoxConstraints(maxHeight: 400),
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
       child: ListView.builder(
         controller: _scrollController,
         shrinkWrap: true,
-        itemCount: episodes.length,
+        itemCount: filtered.length,
         itemBuilder: (context, index) {
           final episodeIndex =
-              _isAscending ? index : episodes.length - 1 - index;
-          final ep = episodes[episodeIndex];
+              _isAscending ? index : filtered.length - 1 - index;
+          final ep = filtered[episodeIndex];
           final isCurrentEpisode = ep.endpoint == widget.currentEndpoint;
           final isWatched = widget.watchedEpisodes.contains(ep.endpoint);
 
@@ -488,7 +534,7 @@ class _ModernEpisodeListState extends State<ModernEpisodeList> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        ep.title,
+                        _formatEpisodeTitle(ep.title),
                         style: GoogleFonts.poppins(
                           fontSize: 15,
                           fontWeight:

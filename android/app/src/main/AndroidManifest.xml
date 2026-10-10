@@ -11,10 +11,12 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <!-- Izin untuk foreground service (jika ada background playback) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- Izin untuk menampilkan pop-up notifikasi (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name="${applicationName}"
-        android:label="nimexx"
+        android:label="Nimexx"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true"
         android:hardwareAccelerated="true"
@@ -49,6 +51,13 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
+        <!-- Firebase Messaging Custom Default Icon & Color -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@mipmap/ic_launcher" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/custom_notification_color" />
     </application>
 
     <!-- Queries untuk url_launcher dan WebView - PENTING untuk Android 11+ -->
