@@ -122,14 +122,22 @@ class AuthService {
     final docSnapshot = await userDoc.get();
 
     if (!docSnapshot.exists) {
+      final defaultName = user.displayName ?? user.email?.split('@')[0] ?? 'User${user.uid.substring(0, 5)}';
+      final defaultPhoto = user.photoURL ?? 'https://api.dicebear.com/7.x/avataaars/png?seed=${user.uid}';
+
       await userDoc.set({
+        'uid': user.uid,
         'email': user.email,
+        'username': defaultName.toLowerCase().replaceAll(' ', '_'),
+        'displayName': defaultName,
+        'photoUrl': defaultPhoto,
         'role': 'user',
         'isBanned': false,
         'createdAt': FieldValue.serverTimestamp(),
         'lastLogin': FieldValue.serverTimestamp(),
       });
     } else {
+      // If logging in, just update lastLogin. But if they don't have photo/name, maybe update them? We leave it for now.
       await userDoc.update({'lastLogin': FieldValue.serverTimestamp()});
     }
   }

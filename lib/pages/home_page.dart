@@ -16,6 +16,8 @@ import '../widgets/ongoing_anime_section.dart';
 import '../widgets/completed_anime_section.dart';
 import '../widgets/home_personal_section.dart';
 import '../widgets/footer_widget.dart';
+import 'global_chat_page.dart';
+import '../widgets/global_chat_preview.dart';
 
 class BerandaTabWebOrMobile extends StatelessWidget {
   const BerandaTabWebOrMobile({super.key});
@@ -263,6 +265,8 @@ class _BerandaTabMobileState extends State<_BerandaTabMobile>
             ),
             const SizedBox(height: 32),
             const HomePersonalSection(),
+            const SizedBox(height: 24),
+            const GlobalChatPreview(),
             const SizedBox(height: 16),
             const OngoingAnimeSection(),
             const SizedBox(height: 32),
@@ -446,6 +450,57 @@ class _MobileHeaderState extends State<_MobileHeader>
               MaterialPageRoute(builder: (_) => const SearchPage()),
             );
           }),
+
+          // Global Chat with realtime preview
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('global_chat')
+                .orderBy('timestamp', descending: true)
+                .limit(1)
+                .snapshots(),
+            builder: (context, chatSnapshot) {
+              final hasRecent = chatSnapshot.hasData && chatSnapshot.data!.docs.isNotEmpty;
+              String? lastMsg;
+              if (hasRecent) {
+                final data = chatSnapshot.data!.docs.first.data() as Map<String, dynamic>;
+                final name = data['senderName'] ?? '';
+                final text = data['text'] ?? '';
+                lastMsg = '$name: $text';
+              }
+
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const GlobalChatPage()),
+                  );
+                },
+                child: Stack(
+                  children: [
+                    _buildIcon(Icons.forum_rounded, const Color(0xFFFF5722), () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const GlobalChatPage()),
+                      );
+                    }),
+                    if (hasRecent)
+                      Positioned(
+                        right: 4,
+                        top: 4,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFFF5722),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
 
           // 🔽 Menu tambahan (fade + slide animasi)
           if (showActions)
