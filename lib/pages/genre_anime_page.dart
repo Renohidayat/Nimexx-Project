@@ -4,6 +4,7 @@ import '../service/anime_service.dart';
 import '../model/anime_model.dart';
 import 'anime_detail_page.dart';
 import '../widgets/web_app_bar.dart';
+import '../widgets/anime_loading_screens.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class GenreAnimePage extends StatefulWidget {
@@ -94,7 +95,8 @@ class _GenreAnimePageState extends State<GenreAnimePage> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 600;
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -156,75 +158,98 @@ class _GenreAnimePageState extends State<GenreAnimePage> {
 
           SliverPadding(
             padding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 60),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                if (index >= _animeList.length) return null;
-                final a = _animeList[index];
-                final slug = a.link.replaceAll(RegExp(r'^/+|/+$'), '');
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 0),
-                    leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        kIsWeb ? a.proxyThumb(_service.baseUrl) : a.thumb,
-                        width: 60,
-                        height: 90,
-                        fit: BoxFit.cover,
-                        errorBuilder:
-                            (_, __, ___) => const ColoredBox(
-                              color: Colors.grey,
-                              child: SizedBox(width: 60, height: 90),
-                            ),
-                      ),
-                    ),
-                    title: Text(
-                      a.title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    subtitle: Text(
-                      a.genres.join(', '),
-                      style: const TextStyle(color: Colors.white70),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    onTap: () {
-                      if (slug.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Link anime tidak tersedia.'),
-                          ),
+            sliver: _animeList.isEmpty && _isLoading
+                ? const SliverToBoxAdapter(child: SizedBox()) // Ditangani oleh loader di bawah
+                : SliverGrid(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        return _AnimeCard(
+                          anime: _animeList[index],
+                          baseUrl: _service.baseUrl,
                         );
-                        return;
-                      }
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => AnimeDetailPage(endpoint: slug),
-                        ),
-                      );
-                    },
+                      },
+                      childCount: _animeList.length,
+                    ),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: width >= 1200 ? 6 : width >= 992 ? 5 : width >= 768 ? 4 : width >= 600 ? 3 : 2,
+                      mainAxisSpacing: isMobile ? 20 : 40,
+                      crossAxisSpacing: isMobile ? 12 : 30,
+                      childAspectRatio: isMobile ? 0.58 : 0.6,
+                    ),
                   ),
-                );
-              }, childCount: _animeList.length),
-            ),
           ),
 
           if (_isLoading)
-            const SliverToBoxAdapter(
+            SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
-                child: Center(child: CircularProgressIndicator()),
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: _animeList.isEmpty 
+                    ? ModernLoadingScreens.buildLoadingScreen()
+                    : const CircularProgressIndicator(),
+                ),
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _AnimeCard extends StatelessWidget {
+  final AnimeModel anime;
+  final String baseUrl;
+
+  const _AnimeCard({required this.anime, required this.baseUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    final slug = anime.link.replaceAll(RegExp(r'^/+|/+$'), '');
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 160),
+        child: InkWell(
+          onTap: () {
+            if (slug.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Link anime tidak tersedia.')),
+              );
+              return;
+            }
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => AnimeDetailPage(endpoint: slug)),
+            );
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AspectRatio(
+                aspectRatio: 0.65,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.network(
+                    kIsWeb ? anime.proxyThumb(baseUrl) : anime.thumb,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const ColoredBox(color: Colors.grey),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                anime.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

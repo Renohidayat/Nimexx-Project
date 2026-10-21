@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/web_app_bar.dart'; // Import WebAppBar
+import 'package:shimmer/shimmer.dart';
 
 class ModernLoadingScreens {
   static const Color cardBackground = Color(0xFF1A1A1A);
@@ -10,68 +11,67 @@ class ModernLoadingScreens {
     int selectedIndex = 0,
     Function(int)? onMenuSelected,
   }) {
-    Widget loadingContent = Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset(
-            'assets/images/love-anime.gif',
-            width: 200,
-            height: 200,
-            fit: BoxFit.contain,
-            // Optimasi untuk mencegah crash dan macet
-            cacheWidth: 200,
-            cacheHeight: 200,
-            filterQuality: FilterQuality.medium,
-            // Error handling jika GIF gagal load
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  color: Colors.grey[800],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.image_not_supported,
-                  color: Colors.white54,
-                  size: 64,
-                ),
-              );
-            },
-            // Optimasi loading frame
-            frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-              if (wasSynchronouslyLoaded) return child;
-              return frame != null
-                  ? child
-                  : Container(
-                    width: 200,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[800],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Center(
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.white54,
+    Widget loadingContent = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          int crossAxisCount = 3;
+          if (width >= 1200) crossAxisCount = 6;
+          else if (width >= 992) crossAxisCount = 5;
+          else if (width >= 768) crossAxisCount = 4;
+          
+          return GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              childAspectRatio: 0.65,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 16,
+            ),
+            itemCount: crossAxisCount * 3, // Tampilkan 3 baris skeleton
+            itemBuilder: (context, index) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Shimmer.fromColors(
+                      baseColor: Colors.grey[850]!,
+                      highlightColor: Colors.grey[700]!,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                     ),
-                  );
+                  ),
+                  const SizedBox(height: 8),
+                  Shimmer.fromColors(
+                    baseColor: Colors.grey[850]!,
+                    highlightColor: Colors.grey[700]!,
+                    child: Container(
+                      height: 14,
+                      width: double.infinity,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Shimmer.fromColors(
+                    baseColor: Colors.grey[850]!,
+                    highlightColor: Colors.grey[700]!,
+                    child: Container(
+                      height: 14,
+                      width: 80,
+                      color: Colors.black,
+                    ),
+                  ),
+                ],
+              );
             },
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'Memuat Halaman...',
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: Colors.white70,
-            ),
-          ),
-        ],
+          );
+        }
       ),
     );
 
@@ -129,6 +129,8 @@ class ModernLoadingScreens {
               error,
               style: GoogleFonts.poppins(fontSize: 14, color: Colors.white70),
               textAlign: TextAlign.center,
+              maxLines: 4,
+              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 24),
             ElevatedButton(

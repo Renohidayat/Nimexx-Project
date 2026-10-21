@@ -5,6 +5,7 @@ import '../service/anime_service.dart';
 import '../pages/anime_detail_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../service/remote_config_service.dart';
+import 'package:shimmer/shimmer.dart';
 
 class OngoingAnimeSection extends StatelessWidget {
   const OngoingAnimeSection({super.key});
@@ -27,7 +28,45 @@ class OngoingAnimeSection extends StatelessWidget {
             future: service.fetchOngoingAnime(1),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
-                return const Center(child: CircularProgressIndicator());
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: List.generate(5, (index) {
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 16.0),
+                        child: SizedBox(
+                          width: width < 600 ? 140 : 220,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Shimmer.fromColors(
+                                baseColor: Colors.grey[850]!,
+                                highlightColor: Colors.grey[700]!,
+                                child: Container(
+                                  height: width < 600 ? 200 : 300,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Shimmer.fromColors(
+                                baseColor: Colors.grey[850]!,
+                                highlightColor: Colors.grey[700]!,
+                                child: Container(
+                                  height: 16,
+                                  width: 100,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                );
               }
 
               final list = snapshot.data!;

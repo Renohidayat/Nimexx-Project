@@ -622,20 +622,33 @@ class _NotificationPageState extends State<NotificationPage>
         await _getNotificationsRef(userId).doc(notifId).update({'read': true});
       }
 
-      // Navigate to episode if episodeId exists
-      final episodeId = data['episodeId'];
-      if (episodeId != null && mounted) {
-        Navigator.pushNamed(
-          context,
-          '/episode',
-          arguments: {
-            'endpoint': episodeId,
-            'episodeTitle': data['episodeTitle'] ?? '',
-            'animeTitle': data['animeTitle'] ?? '',
-            'thumbUrl': data['thumbUrl'] ?? '',
-            'highlightCommentId': data['commentId'],
-          },
-        );
+      // Navigate based on notification type
+      if (data['type'] == 'friend_request') {
+        final fromUserId = data['fromUserId'];
+        if (fromUserId != null && mounted) {
+          // Navigasi ke profil user yang mengirim request
+          Navigator.pushNamed(
+            context,
+            '/public_profile',
+            arguments: fromUserId,
+          );
+        }
+      } else {
+        // Default navigate to episode if episodeId exists
+        final episodeId = data['episodeId'];
+        if (episodeId != null && mounted) {
+          Navigator.pushNamed(
+            context,
+            '/episode',
+            arguments: {
+              'endpoint': episodeId,
+              'episodeTitle': data['episodeTitle'] ?? '',
+              'animeTitle': data['animeTitle'] ?? '',
+              'thumbUrl': data['thumbUrl'] ?? '',
+              'highlightCommentId': data['commentId'],
+            },
+          );
+        }
       }
     } catch (e) {
       if (mounted) {

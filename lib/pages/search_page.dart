@@ -6,6 +6,11 @@ import '../model/search_anime_item.dart';
 import '../service/anime_service.dart';
 import 'anime_detail_page.dart';
 import '../service/remote_config_service.dart';
+import 'genre_anime_page.dart';
+import 'ongoing_anime_page.dart';
+import 'completed_anime_page.dart';
+import 'user_search_page.dart';
+import '../model/genre_model.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -23,6 +28,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   late final Animation<double> _slideAnimation;
 
   Future<List<SearchAnimeItem>>? _future;
+  Future<List<GenreModel>>? _genresFuture;
   bool _isSearching = false;
 
   bool get _isWeb => MediaQuery.of(context).size.width > 900;
@@ -33,6 +39,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    _genresFuture = AnimeService().fetchGenres();
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 350),
@@ -317,10 +324,205 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   }
 
   Widget _buildEmptyState() {
-    return _buildCenteredState(
-      icon: Icons.search_rounded,
-      title: 'Temukan Anime Favoritmu',
-      subtitle: 'Ketik minimal 3 huruf untuk mulai mencari',
+    return _buildAdvancedFilters();
+  }
+
+  Widget _buildAdvancedFilters() {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: _isWeb ? 24 : 16,
+        vertical: 24,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Eksplorasi Lanjutan',
+            style: GoogleFonts.oswald(
+              fontSize: _isWeb ? 24 : 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Temukan anime berdasarkan kategori atau status rilis.',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[400],
+            ),
+          ),
+          const SizedBox(height: 24),
+          _buildFilterSection(
+            title: 'Status Rilis',
+            icon: Icons.movie_filter_rounded,
+            chips: [
+              _FilterChipData(
+                label: 'Sedang Tayang (Ongoing)',
+                color: Colors.green,
+                icon: Icons.play_circle_fill_rounded,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const OngoingAnimePage()),
+                ),
+              ),
+              _FilterChipData(
+                label: 'Sudah Tamat (Completed)',
+                color: Colors.blue,
+                icon: Icons.check_circle_rounded,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CompletedAnimePage()),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+          _buildFilterSection(
+            title: 'Sosial & Komunitas',
+            icon: Icons.people_alt_rounded,
+            chips: [
+              _FilterChipData(
+                label: 'Cari Teman / Pengguna',
+                color: Colors.orangeAccent,
+                icon: Icons.person_search_rounded,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const UserSearchPage()),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+          Row(
+            children: [
+              Icon(Icons.category_rounded, color: Colors.grey[400], size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Berdasarkan Genre',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          FutureBuilder<List<GenreModel>>(
+            future: _genresFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32.0),
+                    child: CircularProgressIndicator(color: Color(0xFFFF5722)),
+                  ),
+                );
+              }
+
+              if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+                return Center(
+                  child: Text(
+                    'Gagal memuat daftar genre',
+                    style: TextStyle(color: Colors.grey[500]),
+                  ),
+                );
+              }
+
+              final genres = snapshot.data!;
+              return Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: genres.map((genre) {
+                  return ActionChip(
+                    label: Text(genre.genre),
+                    labelStyle: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    backgroundColor: Colors.grey[850],
+                    side: BorderSide(color: Colors.grey[800]!),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => GenreAnimePage(
+                            endpoint: genre.endpoint,
+                            title: genre.genre,
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }).toList(),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterSection({
+    required String title,
+    required IconData icon,
+    required List<_FilterChipData> chips,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: Colors.grey[400], size: 20),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: chips.map((chip) {
+            return InkWell(
+              onTap: chip.onTap,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: chip.color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: chip.color.withOpacity(0.3)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(chip.icon, color: chip.color, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      chip.label,
+                      style: TextStyle(
+                        color: chip.color,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 
@@ -696,4 +898,18 @@ class _AnimeInfo extends StatelessWidget {
       ],
     );
   }
+}
+
+class _FilterChipData {
+  final String label;
+  final Color color;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  _FilterChipData({
+    required this.label,
+    required this.color,
+    required this.icon,
+    required this.onTap,
+  });
 }

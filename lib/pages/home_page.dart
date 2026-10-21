@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
+import '../widgets/frosted_glass_bottom_bar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'anime_list_page.dart';
@@ -14,7 +16,13 @@ import '../widgets/web_app_bar.dart';
 import '../widgets/hero_banner.dart';
 import '../widgets/ongoing_anime_section.dart';
 import '../widgets/completed_anime_section.dart';
+import '../widgets/home_personal_section.dart';
 import '../widgets/footer_widget.dart';
+import 'chat_history_page.dart';
+import '../widgets/global_chat_preview.dart';
+import '../service/rank_service.dart';
+import '../widgets/home_rank_banner_switcher.dart';
+import '../widgets/user_avatar_widget.dart';
 
 class BerandaTabWebOrMobile extends StatelessWidget {
   const BerandaTabWebOrMobile({super.key});
@@ -34,6 +42,57 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
+  bool _isNavBarVisible = true;
+  Timer? _scrollStopTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      RankService().syncUserHistoricalExp(user.uid);
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollStopTimer?.cancel();
+    super.dispose();
+  }
+
+  void _onScrollNotification(ScrollNotification notification) {
+    if (notification is UserScrollNotification) {
+      if (notification.direction == ScrollDirection.reverse) {
+        // User sedang scroll ke bawah -> sembunyikan navigasi agar halaman lebih lega
+        _scrollStopTimer?.cancel();
+        if (_isNavBarVisible) {
+          setState(() => _isNavBarVisible = false);
+        }
+      } else if (notification.direction == ScrollDirection.forward) {
+        // User scroll ke atas -> munculkan navigasi kembali
+        _scrollStopTimer?.cancel();
+        if (!_isNavBarVisible) {
+          setState(() => _isNavBarVisible = true);
+        }
+      } else if (notification.direction == ScrollDirection.idle) {
+        // User berhenti scroll -> munculkan navigasi kembali
+        _scrollStopTimer?.cancel();
+        _scrollStopTimer = Timer(const Duration(milliseconds: 350), () {
+          if (mounted && !_isNavBarVisible) {
+            setState(() => _isNavBarVisible = true);
+          }
+        });
+      }
+    } else if (notification is ScrollEndNotification) {
+      // Saat momentum scroll berhenti
+      _scrollStopTimer?.cancel();
+      _scrollStopTimer = Timer(const Duration(milliseconds: 350), () {
+        if (mounted && !_isNavBarVisible) {
+          setState(() => _isNavBarVisible = true);
+        }
+      });
+    }
+  }
 
   final List<Widget> _pages = const [
     BerandaTabWebOrMobile(),
@@ -46,52 +105,69 @@ class _HomePageState extends State<HomePage> {
   ];
 
   void _onSelected(int index) {
-    setState(() => _selectedIndex = index);
+    _scrollStopTimer?.cancel();
+    setState(() {
+      _selectedIndex = index;
+      _isNavBarVisible = true;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final isWeb = kIsWeb;
+    const isWeb = kIsWeb;
 
     return Scaffold(
       backgroundColor: Colors.black,
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _pages,
+      extendBody: true,
+      body: NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          _onScrollNotification(notification);
+          return false;
+        },
+        child: IndexedStack(
+          index: _selectedIndex,
+          children: _pages,
+        ),
       ),
       bottomNavigationBar:
           !isWeb
-              ? SalomonBottomBar(
-                currentIndex: _selectedIndex,
-                onTap: _onSelected,
-                items: [
-                  SalomonBottomBarItem(
-                    icon: Icon(Icons.home),
-                    title: Text("Beranda"),
-                    selectedColor: const Color.fromARGB(255, 255, 7, 7),
-                  ),
-                  SalomonBottomBarItem(
-                    icon: Icon(Icons.list),
-                    title: Text("List"),
-                    selectedColor: Colors.purple,
-                  ),
-                  SalomonBottomBarItem(
-                    icon: Icon(Icons.calendar_today),
-                    title: Text("Jadwal"),
-                    selectedColor: Colors.teal,
-                  ),
-                  SalomonBottomBarItem(
-                    icon: Icon(Icons.play_circle_fill),
-                    title: Text("Ongoing"),
-                    selectedColor: Colors.red,
-                  ),
-                  SalomonBottomBarItem(
-                    icon: Icon(Icons.category),
-                    title: Text("Genre"),
-                    selectedColor: Colors.orange,
-                  ),
-                ],
-              )
+              ? FrostedGlassBottomBar(
+                  currentIndex: _selectedIndex,
+                  isVisible: _isNavBarVisible,
+                  onTap: _onSelected,
+                  items: const [
+                    FrostedGlassBarItem(
+                      icon: Icons.home_outlined,
+                      activeIcon: Icons.home_rounded,
+                      label: "Beranda",
+                      color: Color(0xFFFF2A3C),
+                    ),
+                    FrostedGlassBarItem(
+                      icon: Icons.format_list_bulleted_rounded,
+                      activeIcon: Icons.format_list_bulleted_rounded,
+                      label: "List",
+                      color: Color(0xFFAF52DE),
+                    ),
+                    FrostedGlassBarItem(
+                      icon: Icons.calendar_month_outlined,
+                      activeIcon: Icons.calendar_month_rounded,
+                      label: "Jadwal",
+                      color: Color(0xFF00C7BE),
+                    ),
+                    FrostedGlassBarItem(
+                      icon: Icons.play_circle_outline_rounded,
+                      activeIcon: Icons.play_circle_fill_rounded,
+                      label: "Ongoing",
+                      color: Color(0xFFFF5722),
+                    ),
+                    FrostedGlassBarItem(
+                      icon: Icons.grid_view_outlined,
+                      activeIcon: Icons.grid_view_rounded,
+                      label: "Genre",
+                      color: Color(0xFFFFB300),
+                    ),
+                  ],
+                )
               : null,
     );
   }
@@ -111,6 +187,8 @@ class _BerandaTabWeb extends StatelessWidget {
             onSelected: (index) => _handleMenuSelected(context, index),
           ),
           const HeroBanner(),
+          const SizedBox(height: 16),
+          const HomePersonalSection(),
           const SizedBox(height: 16),
           const OngoingAnimeSection(),
           const SizedBox(height: 32),
@@ -151,118 +229,31 @@ class _BerandaTabWeb extends StatelessWidget {
 
 // class _BerandaTabMobile dan _MobileHeader tetap sama seperti sebelumnya.
 
-class _BerandaTabMobile extends StatefulWidget {
+class _BerandaTabMobile extends StatelessWidget {
   const _BerandaTabMobile();
 
   @override
-  State<_BerandaTabMobile> createState() => _BerandaTabMobileState();
-}
-
-class _BerandaTabMobileState extends State<_BerandaTabMobile>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _fadeAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    );
-    _scaleAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutBack,
-    );
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return SafeArea(
+    return const SafeArea(
+      bottom: false,
       child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const _MobileHeader(),
-            const SizedBox(height: 16),
-            const HeroBanner(),
-            const SizedBox(height: 24),
-            Center(
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: ScaleTransition(
-                  scale: _scaleAnimation,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 800),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFFF0000), Color(0xFFFF8800)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFFF7B00).withOpacity(0.3),
-                              blurRadius: 10,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.asset(
-                                'assets/images/logo.png',
-                                height: 50,
-                                width: 50,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            const Expanded(
-                              child: Text(
-                                'Duduk santai, siapkan camilan, dan mari tenggelam dalam dunia anime kesayanganmu!',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  color: Colors.white,
-                                  height: 1.3,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 32),
-            const OngoingAnimeSection(),
-            const SizedBox(height: 32),
-            const CompletedAnimeSection(),
-            const SizedBox(height: 32),
+            _MobileHeader(),
+            SizedBox(height: 16),
+            HeroBanner(),
+            SizedBox(height: 24),
+            HomeRankBannerSwitcher(),
+            SizedBox(height: 32),
+            HomePersonalSection(),
+            SizedBox(height: 24),
+            GlobalChatPreview(),
+            SizedBox(height: 16),
+            OngoingAnimeSection(),
+            SizedBox(height: 32),
+            CompletedAnimeSection(),
+            SizedBox(height: 32),
           ],
         ),
       ),
@@ -270,41 +261,8 @@ class _BerandaTabMobileState extends State<_BerandaTabMobile>
   }
 }
 
-class _MobileHeader extends StatefulWidget {
+class _MobileHeader extends StatelessWidget {
   const _MobileHeader();
-
-  @override
-  State<_MobileHeader> createState() => _MobileHeaderState();
-}
-
-class _MobileHeaderState extends State<_MobileHeader>
-    with SingleTickerProviderStateMixin {
-  bool showActions = false;
-
-  late final AnimationController _controller;
-  late final Animation<double> _fade;
-  late final Animation<Offset> _slide;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400),
-    );
-
-    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
-    _slide = Tween<Offset>(
-      begin: const Offset(1, 0),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
 
   String getGreeting() {
     final hour = DateTime.now().hour;
@@ -322,37 +280,45 @@ class _MobileHeaderState extends State<_MobileHeader>
     if (user == null) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            const CircleAvatar(
-              radius: 20,
-              backgroundImage: AssetImage('assets/images/default_profile.png'),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    greeting,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w300,
-                      color: Colors.white70,
-                    ),
-                  ),
-                  const Text(
-                    'Pengguna',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1C1C28),
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(color: Colors.white10),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4)),
+            ],
+          ),
+          child: Row(
+            children: [
+              const UserAvatarWidget(
+                photoUrl: null,
+                displayName: 'Pengguna',
+                radius: 20,
               ),
-            ),
-          ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      greeting,
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w300, color: Colors.white70),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const Text(
+                      'Pengguna',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -371,159 +337,129 @@ class _MobileHeaderState extends State<_MobileHeader>
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            children: [
-              // 👉 Avatar Profil
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const ProfilePage()),
-                  );
-                },
-                child: CircleAvatar(
-                  radius: 20,
-                  backgroundImage:
-                      photoUrl != null
-                          ? NetworkImage(photoUrl)
-                          : const AssetImage('assets/images/default_profile.png')
-                              as ImageProvider,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1C1C28),
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(color: Colors.white10),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4)),
+              ],
+            ),
+            child: Row(
+              children: [
+                // 👉 Avatar Profil Bergaya Akun Google
+                UserAvatarWidget(
+                  photoUrl: photoUrl,
+                  displayName: userName,
+                  radius: 22,
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfilePage()));
+                  },
                 ),
-              ),
-              const SizedBox(width: 12),
+                const SizedBox(width: 12),
 
-              // 👉 Sapaan dan Nama
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      greeting,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w300,
-                        color: Colors.white70,
+                // 👉 Sapaan dan Nama (Aman dari Bug Squish)
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        greeting,
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: Colors.white70),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    Text(
-                      userName,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                      Text(
+                        userName,
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+                
+                const SizedBox(width: 8),
 
-          // 🔽 Toggle Tombol Aksi "<"
-          _buildIcon(
-            showActions ? Icons.chevron_right : Icons.chevron_left,
-            Colors.white,
-            () {
-              setState(() {
-                showActions = !showActions;
-                if (showActions) {
-                  _controller.forward();
-                } else {
-                  _controller.reverse();
-                }
-              });
-            },
-          ),
+                // 🔍 Search Action
+                _buildActionBtn(Icons.search, Colors.white, () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const SearchPage()));
+                }),
 
-          const SizedBox(width: 4), // jarak antara "<" dan search
-          // 🔍 Search (selalu tampil dengan border)
-          _buildIcon(Icons.search, Colors.orange, () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const SearchPage()),
-            );
-          }),
+                // 💬 Chat History Action
+                _buildActionBtn(Icons.chat_bubble_rounded, const Color(0xFFFF5722), () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatHistoryPage()));
+                }),
 
-          // 🔽 Menu tambahan (fade + slide animasi)
-          if (showActions)
-            FadeTransition(
-              opacity: _fade,
-              child: SlideTransition(
-                position: _slide,
-                child: Row(
-                  children: [
-                    _buildIcon(Icons.favorite, Colors.redAccent, () {
-                      Navigator.pushNamed(context, '/favorites');
-                    }),
-                    _buildIcon(Icons.history, Colors.orange, () {
-                      Navigator.pushNamed(context, '/history');
-                    }),
-                    StreamBuilder<QuerySnapshot>(
-                      stream:
-                          FirebaseFirestore.instance
-                              .collection('users')
-                              .doc(user?.uid)
-                              .collection('notifications')
-                              .where('read', isEqualTo: false)
-                              .snapshots(),
-                      builder: (context, snapshot) {
-                        final unread = snapshot.data?.docs.length ?? 0;
-                        return Stack(
-                          children: [
-                            _buildIcon(Icons.notifications, Colors.white, () {
-                              Navigator.pushNamed(context, '/notifications');
-                            }),
-                            if (unread > 0)
-                              Positioned(
-                                right: 6,
-                                top: 6,
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.red,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  constraints: const BoxConstraints(
-                                    minWidth: 18,
-                                    minHeight: 18,
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      unread.toString(),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
+                // 🔔 Notifications Action
+                StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(user.uid)
+                      .collection('notifications')
+                      .where('read', isEqualTo: false)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    final unread = snapshot.data?.docs.length ?? 0;
+                    return Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        _buildActionBtn(Icons.notifications_rounded, Colors.white, () {
+                          Navigator.pushNamed(context, '/notifications');
+                        }),
+                        if (unread > 0)
+                          Positioned(
+                            right: 2,
+                            top: 2,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFF5722),
+                                border: Border.all(color: const Color(0xFF1C1C28), width: 2),
+                                shape: BoxShape.circle,
+                              ),
+                              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                              child: Center(
+                                child: Text(
+                                  unread > 9 ? '9+' : unread.toString(),
+                                  style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                                  textAlign: TextAlign.center,
                                 ),
                               ),
-                          ],
-                        );
-                      },
-                    ),
-                  ],
+                            ),
+                          ),
+                      ],
+                    );
+                  },
                 ),
-              ),
+              ],
             ),
-        ],
-      ),
+          ),
+        );
+      },
     );
   }
 
-  // ✅ Wrapper icon dengan border dan padding bulat
-  Widget _buildIcon(IconData icon, Color color, VoidCallback onTap) {
+  // ✅ Wrapper icon dengan efek hover modern
+  Widget _buildActionBtn(IconData icon, Color color, VoidCallback onTap) {
     return Container(
       margin: const EdgeInsets.only(left: 6),
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.white10,
-        border: Border.all(color: Colors.white30),
       ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(30),
-        child: Icon(icon, color: color, size: 20),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(30),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Icon(icon, color: color, size: 20),
+          ),
+        ),
       ),
     );
   }

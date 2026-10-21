@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'firebase_options.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:intl/date_symbol_data_local.dart';
 import 'service/remote_config_service.dart';
 import 'auth_wrapper.dart';
+import 'service/messaging_service.dart'; // Import fitur notifikasi
 import 'pages/login_web_page.dart';
 import 'pages/home_page.dart';
 import 'pages/genre_list_page.dart';
@@ -16,8 +18,10 @@ import 'pages/anime_list_page.dart';
 import 'pages/login_android_page.dart';
 import 'pages/profile_page.dart';
 import 'pages/history_page.dart';
+import 'pages/public_profile_page.dart';
 import 'pages/favorite_page.dart';
 import 'pages/notifications_page.dart';
+import 'pages/leaderboard_page.dart';
 import 'pages/episode_page.dart';
 import 'admin/admin_home.dart';
 import 'admin/dashboard/dashboard_overview_page.dart';
@@ -29,9 +33,16 @@ import 'widgets/maintenance_dialog.dart'; // Import file maintenance yang baru
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // ✅ Inisialisasi Hive untuk Caching
+  await Hive.initFlutter();
+  await Hive.openBox('api_cache');
+
   // ✅ Inisialisasi Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await RemoteConfigService.init();
+
+  // ✅ Inisialisasi Firebase Cloud Messaging & Berlangganan Topik
+  await MessagingService.init();
 
   // ✅ Persist login
   await _setFirebasePersistence();
@@ -91,6 +102,7 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.dark,
         scaffoldBackgroundColor: Colors.black,
       ),
+      navigatorKey: MessagingService.navigatorKey, // Kunci rahasia untuk routing dari background
       initialRoute: '/',
       onGenerateRoute: (settings) {
         final isLoggedIn = FirebaseAuth.instance.currentUser != null;
@@ -135,12 +147,20 @@ class MyApp extends StatelessWidget {
             return _guardedRoute(const SearchPage(), isLoggedIn);
           case '/profile':
             return _guardedRoute(const ProfilePage(), isLoggedIn);
+          case '/public_profile':
+            final userId = settings.arguments as String?;
+            if (userId == null) {
+              return MaterialPageRoute(builder: (_) => errorPage);
+            }
+            return _guardedRoute(PublicProfilePage(userId: userId), isLoggedIn);
           case '/history':
             return _guardedRoute(const HistoryPage(), isLoggedIn);
           case '/favorites':
             return _guardedRoute(const FavoritePage(), isLoggedIn);
           case '/notifications':
             return _guardedRoute(const NotificationPage(), isLoggedIn);
+          case '/leaderboard':
+            return _guardedRoute(const LeaderboardPage(), isLoggedIn);
           case '/episode':
             final args = settings.arguments;
             if (args is! Map<String, dynamic> ||

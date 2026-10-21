@@ -121,16 +121,52 @@ class AuthService {
         .doc(user.uid);
     final docSnapshot = await userDoc.get();
 
+    final googleName = user.displayName?.trim() ?? '';
+    final emailName = user.email != null && user.email!.contains('@')
+        ? user.email!.split('@')[0].trim()
+        : '';
+    final resolvedName = googleName.isNotEmpty
+        ? googleName
+        : (emailName.isNotEmpty ? emailName : 'User${user.uid.substring(0, 5)}');
+    final googlePhoto = user.photoURL?.trim() ?? '';
+
     if (!docSnapshot.exists) {
       await userDoc.set({
+        'uid': user.uid,
         'email': user.email,
+        'username': resolvedName.toLowerCase().replaceAll(' ', '_'),
+        'displayName': resolvedName,
+        'photoUrl': googlePhoto,
         'role': 'user',
         'isBanned': false,
         'createdAt': FieldValue.serverTimestamp(),
         'lastLogin': FieldValue.serverTimestamp(),
       });
     } else {
-      await userDoc.update({'lastLogin': FieldValue.serverTimestamp()});
+      final existingData = docSnapshot.data() ?? {};
+      final Map<String, dynamic> updates = {
+        'lastLogin': FieldValue.serverTimestamp(),
+      };
+
+      // Sinkronkan foto Google asli jika di Firestore masih kosong atau placeholder
+      final currentPhoto = (existingData['photoUrl'] as String?)?.trim() ?? '';
+      if (googlePhoto.isNotEmpty &&
+          (currentPhoto.isEmpty ||
+              currentPhoto.contains('dicebear.com') ||
+              currentPhoto.contains('default_profile'))) {
+        updates['photoUrl'] = googlePhoto;
+      }
+
+      // Sinkronkan nama Google asli jika di Firestore masih default 'Pengguna Nimexx'
+      final currentName = (existingData['displayName'] as String?)?.trim() ?? '';
+      if (googleName.isNotEmpty &&
+          (currentName.isEmpty ||
+              currentName == 'Pengguna Nimexx' ||
+              currentName.startsWith('User'))) {
+        updates['displayName'] = googleName;
+      }
+
+      await userDoc.set(updates, SetOptions(merge: true));
     }
   }
 

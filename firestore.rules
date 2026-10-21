@@ -1,0 +1,144 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================
+    // 🛡️ HELPER FUNCTIONS
+    // ============================================
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
+    ////////////////////////////////////////////
+    // 💬 1. KOMENTAR EPISODE (Public + Admin)
+    ////////////////////////////////////////////
+    match /episodes/{episodeId}/comments/{commentId} {
+      allow read: if true;
+      allow create: if isSignedIn() &&
+                    request.resource.data.uid == request.auth.uid;
+      allow update, delete: if isSignedIn() &&
+        (request.auth.uid == resource.data.uid || isAdmin());
+    }
+
+    // Collection Group 'comments'
+    // Digunakan oleh Halaman Profil User & Dashboard Admin
+    match /{path=**}/comments/{commentId} {
+      allow read: if true;
+      allow update, delete: if isSignedIn() &&
+        (request.auth.uid == resource.data.uid || isAdmin());
+    }
+
+    ////////////////////////////////////////////
+    // 💬 2. SUBKOLEKSI KOMENTAR USER (User Comments)
+    ////////////////////////////////////////////
+    match /users/{userId}/user_comments/{commentId} {
+      allow read: if true;
+      allow create, update, delete: if isOwner(userId) || isAdmin();
+    }
+
+    ////////////////////////////////////////////
+    // 🔔 3. NOTIFIKASI USER
+    ////////////////////////////////////////////
+    match /users/{userId}/notifications/{notifId} {
+      // Izinkan create jika login (untuk user lain mengirim balasan komentar / friend request)
+      allow create: if isSignedIn();
+      allow read, update, delete: if isOwner(userId) || isAdmin();
+    }
+
+    ////////////////////////////////////////////
+    // 👤 4. DATA USER
+    ////////////////////////////////////////////
+    match /users/{userId} {
+      // Publik diizinkan membaca agar foto, nama, badge/level tampil di profil orang lain & episode
+      allow read: if true;
+      // Update diizinkan untuk login user (dibutuhkan fitur friend request & edit profile)
+      allow update: if isSignedIn();
+      allow create, delete: if isOwner(userId) || isAdmin();
+    }
+
+    ////////////////////////////////////////////
+    // 📊 5. HISTORI NONTON USER
+    ////////////////////////////////////////////
+    // Dokumen induk watch_history (dibutuhkan saat scan autoSync leaderboard)
+    match /watch_history/{userId} {
+      allow read: if true;
+      allow write, delete: if isOwner(userId) || isAdmin();
+    }
+
+    // Subkoleksi history episode (dibaca publik agar riwayat tontonan langsung muncul di profil orang lain)
+    match /watch_history/{userId}/history/{episodeId} {
+      allow read: if true;
+      allow write, delete: if isOwner(userId) || isAdmin();
+    }
+
+    // Collection Group 'history' untuk Admin Top View Chart & Leaderboard Sync
+    match /{path=**}/history/{episodeId} {
+      allow read: if true;
+      allow delete: if isAdmin();
+    }
+
+    ////////////////////////////////////////////
+    // ⭐ 6. FAVORIT ANIME
+    ////////////////////////////////////////////
+    // Subkoleksi favorit user (dibaca publik agar daftar favorit langsung muncul di profil orang lain)
+    match /users/{userId}/favorites/{docId} {
+      allow read: if true;
+      allow write, delete: if isOwner(userId) || isAdmin();
+    }
+
+    // Collection Group 'favorites' untuk Admin Top Favorit Chart & Leaderboard
+    match /{path=**}/favorites/{docId} {
+      allow read: if true;
+      allow delete: if isAdmin();
+    }
+    
+    ////////////////////////////////////////////
+    // 🚩 7. LAPORAN KOMENTAR
+    ////////////////////////////////////////////
+    match /reports/{reportId} {
+      allow create: if isSignedIn() &&
+                    request.resource.data.uid == request.auth.uid;
+      allow read, delete: if isAdmin();
+    }
+
+    ////////////////////////////////////////////
+    // 🌐 8. GLOBAL CHAT
+    ////////////////////////////////////////////
+    match /global_chat/{messageId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn() &&
+        (request.auth.uid == resource.data.senderId || isAdmin());
+    }
+
+    ////////////////////////////////////////////
+    // 🔒 9. PRIVATE CHATS (Antar User)
+    ////////////////////////////////////////////
+    match /private_chats/{roomId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /private_chats/{roomId}/messages/{messageId} {
+      allow read, create: if isSignedIn();
+      allow update, delete: if isSignedIn() &&
+        (resource.data.senderId == request.auth.uid || isAdmin());
+    }
+
+    ////////////////////////////////////////////
+    // 🔒 10. FALLBACK BLOCK SEMUA YANG TIDAK DIIZINKAN
+    ////////////////////////////////////////////
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

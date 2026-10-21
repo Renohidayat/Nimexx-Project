@@ -1,15 +1,15 @@
-# 🎌 Nimexx - Inovasi Platform Streaming Anime dengan api otakudesu
+#  Nimexx - Inovasi Platform Streaming Anime dengan api otakudesu
 
 **Platform streaming anime Nimexx berbasis web dan mobile dengan sistem manajemen terpadu**
 
-### 🛠️ Development Environment
+###  Development Environment
 
 # Setup Project Cara Menggunakan nya
 cd nimexx
 flutter pub get
 flutter run
 
-## 📋 Informasi Proyek
+## Informasi Proyek
 
 ### 👥 Tim Pengembang
 |        Nama          |     NIM      |                           Role                           |
@@ -21,31 +21,31 @@ flutter run
 | Ferdy Rafi Fauzy     | 220660121131 | UI/UX Designer                                           |
 | Yogi Cahya Yogaswara | 220660121119 | Quality Assurance                                        |
 
-### 🎯 Latar Belakang Inovasi
+### Latar Belakang Inovasi
 Dengan meningkatnya konsumsi konten anime di Indonesia, terdapat kebutuhan akan platform streaming yang:
 - **User-friendly** untuk berbagai device
 - **Sistem manajemen konten** yang efisien
 - **Analytics real-time** untuk monitoring engagement
 - **Cross-platform compatibility** (web & mobile)
 
-## 🚀 Inovasi Produk
+##  Inovasi Produk
 
-### ✨ Keunggulan Utama
+### Keunggulan Utama
 1. **Dual Platform Architecture**: Satu codebase untuk web dan mobile
 2. **Real-time Analytics Dashboard**: Monitoring user engagement secara live
 3. **Advanced Comment System**: Sistem komentar dengan moderasi otomatis
 4. **Remote Maintenance Control**: Maintenance tanpa downtime
 5. **Responsive Video Player**: Adaptive streaming quality
 
-### 🛠️ Teknologi Inovasi
+###  Teknologi Inovasi
 - **Flutter Framework**: Cross-platform development
 - **Firebase Ecosystem**: Cloud-native backend
 - **Otakudesu API Integration**: Content management
 - **Progressive Web App**: Web app dengan performa native
 
-## 📱 Fitur Produk
+##  Fitur Produk
 
-### 🎬 Fitur Pengguna
+###  Fitur Pengguna
 - **Streaming HD**: Video player dengan multiple quality
 - **Smart Search**: Pencarian berdasarkan genre, tahun, status
 - **Personal Library**: Favorit, history, watchlist
@@ -53,16 +53,16 @@ Dengan meningkatnya konsumsi konten anime di Indonesia, terdapat kebutuhan akan 
 - **Notification System**: Alert episode baru
 - **Cross-device Sync**: Lanjutkan tontonan di device berbeda
 
-### 👨‍💼 Admin Management Panel
+### Admin Management Panel
 - **Real-time Dashboard**: Analytics pengunjung dan engagement
 - **Content Moderation**: Kelola komentar dan user-generated content
 - **User Management**: Monitoring aktivitas pengguna
 - **System Maintenance**: Remote control untuk maintenance
 - **Performance Analytics**: Detailed statistics dan reporting
 
-## 🔐 Akses Sistem Gmail & Sandi Google
+##  Akses Sistem Gmail & Sandi Google
 
-### 🌐 Admin Panel (Web Only)
+###  Admin Panel (Web Only)
 ```
 URL: https://nimexx.cloud
 Email: hajireno49@gmail.com
@@ -70,17 +70,17 @@ Password: bandunglembang
 ```
 > **Note**: Admin panel hanya dapat diakses melalui web browser 
 
-### 🔑 Firebase Console Access Gmail & Sandi Google
+###  Firebase Console Access Gmail & Sandi Google
 ```
 Project: nimexxx
 Email: hajireno49@gmail.com
 Password: bandunglembang
 ```
 
-## 🏗️ Arsitektur Sistem
+##  Arsitektur Sistem
 
-### 📊 Database Structure (Firebase Firestore)
-```
+###  Database Structure (Firebase Firestore)
+``
 Collections:
 ├── users/           # User profiles & preferences
 ├── anime/           # Anime metadata & episodes
@@ -91,7 +91,7 @@ Collections:
 └── maintenance/     # System control flags
 ```
 
-### 🔄 Data Flow Architecture
+###  Data Flow Architecture
 1. **Client Request** → Flutter App/Web
 2. **API Gateway** → Otakudesu API Integration
 3. **Database** → Firebase Firestore
@@ -99,29 +99,29 @@ Collections:
 5. **Storage** → Firebase Storage (metadata)
 6. **Analytics** → Real-time Dashboard
 
-## 📈 Inovasi Teknis
+## Inovasi Teknis
 
-### 🎯 Performance Optimization
+###  Performance Optimization
 - **Lazy Loading**: Efficient content loading
 - **Caching Strategy**: Offline content availability  
 - **Image Optimization**: Adaptive image compression
 - **CDN Integration**: Fast content delivery
 
-### 🔐 Security Features
+### Security Features
 - **Role-based Access Control**: User/Admin permissions
 - **Input Validation**: XSS dan injection protection
 - **Secure Authentication**: Firebase Auth integration
 - **Data Encryption**: End-to-end secure communication
 
-### 📊 Analytics Innovation
+###  Analytics Innovation
 - **Real-time User Tracking**: Live user behavior analysis
 - **Content Performance Metrics**: Episode popularity tracking
 - **Engagement Analytics**: Comment dan interaction analysis
 - **Predictive Analytics**: Content recommendation engine
 
-## 🚀 Implementasi
+##  Implementasi
 
-### 📋 System Requirements
+###  System Requirements
 - **Frontend**: Flutter 3.29.3 
 - **Backend**: Firebase (Auth, Firestore, Functions)
 - **Platform**: Android 6.0+, Web (Chrome, Firefox,dll)
@@ -129,35 +129,35 @@ Collections:
 - **Tools**: Dart 3.7.2 • DevTools 2.42.3
 
 
-### ⚡ Performance Metrics
+###  Performance Metrics
 - **Load Time**: < 3 detik (initial load)
 - **Video Startup**: < 2 detik
 - **Search Response**: < 1 detik
 - **Cross-platform**: 95% code reuse
 
-### 🔧 Deployment Pipeline
+###  Deployment Pipeline
 1. **Development**: Local Flutter environment  
 2. **Testing**: Firebase Test Lab
 3. **Staging**: Firebase Hosting (preview)
 4. **Production**: Firebase Hosting + apk pure
 
-## 📊 Impact & Results
+##  Impact & Results
 
-### 📈 Target Metrics
+###  Target Metrics
 - **User Engagement**: 80%+ retention rate
 - **Performance**: 95%+ uptime
 - **Cross-platform**: Consistent UX web & mobile
 - **Admin Efficiency**: 50% faster content management
 
-### 🎯 Market Potential
+### Market Potential
 - **Target Audience**: Anime enthusiasts Indonesia (18-35 tahun)
 - **Market Size**: 50M+ potential users
 - **Revenue Model**: Ads, premium subscription
 - **Scalability**: Cloud-native architecture
 
-## 🔮 Future Development
+##  Future Development
 
-### 📱 Roadmap V2.0
+###  Roadmap V2.0
 - [ ] iOS App Support
 - [ ] Offline Download Feature
 - [ ] AI Content Recommendation
@@ -166,15 +166,15 @@ Collections:
 - [ ] Live Chat During Episodes
 - [ ] Virtual Reality Support
 
-### 🌟 Innovation Extensions
+### Innovation Extensions
 - **Machine Learning**: Personalized content curation
 - **Blockchain**: NFT collectibles integration
 - **IoT**: Smart TV apps
 - **AR/VR**: Immersive viewing experience
 
-## 📞 Technical Support
+## Technical Support
 
-### 📚 Documentation
+###  Documentation
 - **API Documentation**: `/docs/api`
 - **Component Library**: `/docs/components`  
 - **Database Schema**: `/docs/database`
@@ -182,6 +182,6 @@ Collections:
 
 ---
 
-**🏆 Inovasi Mahasiswa - Platform Streaming Anime Next Generation**
+** Inovasi Mahasiswa - Platform Streaming Anime Next Generation**
 
 *Dikembangkan sebagai solusi komprehensif untuk konsumsi konten anime dengan teknologi terdepan dan user experience yang optimal.*

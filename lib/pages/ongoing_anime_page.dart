@@ -51,15 +51,23 @@ class _OngoingAnimePageState extends State<OngoingAnimePage> {
 
     setState(() => _busy = true);
 
-    _future = AnimeService()
-        .fetchOngoingAnime(p)
-        .then((list) => _cache[p] = list)
-        .whenComplete(() {
-          setState(() {
-            _page = p;
-            _busy = false;
-          });
+    final reqFuture = AnimeService().fetchOngoingAnime(p);
+    
+    // Assign synchronous
+    setState(() {
+      _future = reqFuture;
+    });
+
+    reqFuture.then((list) {
+      _cache[p] = list;
+    }).whenComplete(() {
+      if (mounted) {
+        setState(() {
+          _page = p;
+          _busy = false;
         });
+      }
+    });
   }
 
   void _handleMenuSelected(int index) {
