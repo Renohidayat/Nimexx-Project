@@ -18,8 +18,10 @@ import 'pages/anime_list_page.dart';
 import 'pages/login_android_page.dart';
 import 'pages/profile_page.dart';
 import 'pages/history_page.dart';
+import 'pages/public_profile_page.dart';
 import 'pages/favorite_page.dart';
 import 'pages/notifications_page.dart';
+import 'pages/leaderboard_page.dart';
 import 'pages/episode_page.dart';
 import 'admin/admin_home.dart';
 import 'admin/dashboard/dashboard_overview_page.dart';
@@ -145,12 +147,20 @@ class MyApp extends StatelessWidget {
             return _guardedRoute(const SearchPage(), isLoggedIn);
           case '/profile':
             return _guardedRoute(const ProfilePage(), isLoggedIn);
+          case '/public_profile':
+            final userId = settings.arguments as String?;
+            if (userId == null) {
+              return MaterialPageRoute(builder: (_) => errorPage);
+            }
+            return _guardedRoute(PublicProfilePage(userId: userId), isLoggedIn);
           case '/history':
             return _guardedRoute(const HistoryPage(), isLoggedIn);
           case '/favorites':
             return _guardedRoute(const FavoritePage(), isLoggedIn);
           case '/notifications':
             return _guardedRoute(const NotificationPage(), isLoggedIn);
+          case '/leaderboard':
+            return _guardedRoute(const LeaderboardPage(), isLoggedIn);
           case '/episode':
             final args = settings.arguments;
             if (args is! Map<String, dynamic> ||

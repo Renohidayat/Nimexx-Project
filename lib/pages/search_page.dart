@@ -9,6 +9,7 @@ import '../service/remote_config_service.dart';
 import 'genre_anime_page.dart';
 import 'ongoing_anime_page.dart';
 import 'completed_anime_page.dart';
+import 'user_search_page.dart';
 import '../model/genre_model.dart';
 
 class SearchPage extends StatefulWidget {
@@ -377,6 +378,22 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
             ],
           ),
           const SizedBox(height: 32),
+          _buildFilterSection(
+            title: 'Sosial & Komunitas',
+            icon: Icons.people_alt_rounded,
+            chips: [
+              _FilterChipData(
+                label: 'Cari Teman / Pengguna',
+                color: Colors.orangeAccent,
+                icon: Icons.person_search_rounded,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const UserSearchPage()),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
           Row(
             children: [
               Icon(Icons.category_rounded, color: Colors.grey[400], size: 20),
@@ -419,7 +436,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                 runSpacing: 12,
                 children: genres.map((genre) {
                   return ActionChip(
-                    label: Text(genre.title),
+                    label: Text(genre.genre),
                     labelStyle: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w500,
@@ -434,8 +451,8 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                         context,
                         MaterialPageRoute(
                           builder: (_) => GenreAnimePage(
-                            genreEndpoint: genre.endpoint,
-                            genreTitle: genre.title,
+                            endpoint: genre.endpoint,
+                            title: genre.genre,
                           ),
                         ),
                       );

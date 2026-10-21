@@ -17,7 +17,7 @@ class ChatService {
         .snapshots();
   }
 
-  Future<void> sendGlobalMessage(String text, {String? replyToMessageId}) async {
+  Future<void> sendGlobalMessage(String text, {String? replyToMessageId, Map<String, dynamic>? tagData}) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception("Harus login untuk mengirim pesan");
 
@@ -25,14 +25,37 @@ class ChatService {
     final displayName = userDoc.data()?['displayName'] ?? 'User';
     final photoUrl = userDoc.data()?['photoUrl'] ?? '';
 
-    await _firestore.collection('global_chat').add({
+    final payload = <String, dynamic>{
       'senderId': user.uid,
       'senderName': displayName,
       'senderPhotoUrl': photoUrl,
       'text': text.trim(),
       'timestamp': FieldValue.serverTimestamp(),
       'replyToMessageId': replyToMessageId,
+    };
+    
+    if (tagData != null) {
+      payload['tagData'] = tagData;
+    }
+
+    await _firestore.collection('global_chat').add(payload);
+  }
+
+  Future<void> editGlobalMessage(String messageId, String newText) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    
+    await _firestore.collection('global_chat').doc(messageId).update({
+      'text': newText.trim(),
+      'isEdited': true,
     });
+  }
+
+  Future<void> deleteGlobalMessage(String messageId) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    await _firestore.collection('global_chat').doc(messageId).delete();
   }
 
   // ---------------------------------------------------------------------------
@@ -44,6 +67,17 @@ class ChatService {
     List<String> ids = [userId1, userId2];
     ids.sort();
     return ids.join('_');
+  }
+
+  Stream<QuerySnapshot> getChatHistoryStream() {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception("Harus login");
+
+    return _firestore
+        .collection('private_chats')
+        .where('participants', arrayContains: user.uid)
+        .orderBy('lastTimestamp', descending: true)
+        .snapshots();
   }
 
   Stream<QuerySnapshot> getPrivateChatStream(String peerId) {
@@ -61,23 +95,29 @@ class ChatService {
         .snapshots();
   }
 
-  Future<void> sendPrivateMessage(String peerId, String text, {String? replyToMessageId}) async {
+  Future<void> sendPrivateMessage(String peerId, String text, {String? replyToMessageId, Map<String, dynamic>? tagData}) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception("Harus login untuk mengirim pesan");
 
     final roomId = _getChatRoomId(user.uid, peerId);
     
+    final payload = <String, dynamic>{
+      'senderId': user.uid,
+      'text': text.trim(),
+      'timestamp': FieldValue.serverTimestamp(),
+      'replyToMessageId': replyToMessageId,
+    };
+
+    if (tagData != null) {
+      payload['tagData'] = tagData;
+    }
+
     // Kita simpan pesan di subcollection 'messages'
     await _firestore
         .collection('private_chats')
         .doc(roomId)
         .collection('messages')
-        .add({
-      'senderId': user.uid,
-      'text': text.trim(),
-      'timestamp': FieldValue.serverTimestamp(),
-      'replyToMessageId': replyToMessageId,
-    });
+        .add(payload);
 
     // Kita juga bisa menyimpan metadata chat room untuk list obrolan
     await _firestore.collection('private_chats').doc(roomId).set({
@@ -86,5 +126,34 @@ class ChatService {
       'lastTimestamp': FieldValue.serverTimestamp(),
       'lastSenderId': user.uid,
     }, SetOptions(merge: true));
+  }
+
+  Future<void> editPrivateMessage(String peerId, String messageId, String newText) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    
+    final roomId = _getChatRoomId(user.uid, peerId);
+    await _firestore
+        .collection('private_chats')
+        .doc(roomId)
+        .collection('messages')
+        .doc(messageId)
+        .update({
+      'text': newText.trim(),
+      'isEdited': true,
+    });
+  }
+
+  Future<void> deletePrivateMessage(String peerId, String messageId) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    final roomId = _getChatRoomId(user.uid, peerId);
+    await _firestore
+        .collection('private_chats')
+        .doc(roomId)
+        .collection('messages')
+        .doc(messageId)
+        .delete();
   }
 }

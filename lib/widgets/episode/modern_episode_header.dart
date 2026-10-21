@@ -8,12 +8,6 @@ class ModernEpisodeHeader extends StatelessWidget {
   final VoidCallback onBackPressed;
   final bool isWeb;
 
-  // Modern color scheme
-  static const Color primaryOrange = Color(0xFFFF6B35);
-  static const Color secondaryOrange = Color(0xFFFF8C42);
-  static const Color cardBackground = Color(0xFF1A1A1A);
-  static const Color surfaceColor = Color(0xFF252525);
-
   const ModernEpisodeHeader({
     super.key,
     required this.episode,
@@ -24,75 +18,75 @@ class ModernEpisodeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [cardBackground, surfaceColor.withOpacity(0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        color: const Color(0xFF07080B).withOpacity(0.8), // bg-background/80
+        border: const Border(
+          bottom: BorderSide(color: Colors.white10),
         ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: primaryOrange.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: primaryOrange.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back_ios, color: primaryOrange),
-                  onPressed: onBackPressed,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Tonton Episode",
-                      style: GoogleFonts.oswald(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: primaryOrange,
-                        letterSpacing: 1.5,
-                      ),
+          Expanded(
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: onBackPressed,
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0F1118), // surface
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white10),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      episode.title,
-                      style: GoogleFonts.oswald(
-                        fontSize: isWeb ? 28 : 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        height: 1.2,
-                      ),
-                    ),
-                  ],
+                    child: const Icon(Icons.arrow_back_ios_new, size: 16, color: Colors.white70),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Container(
-            height: 4,
-            width: 120,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [primaryOrange, secondaryOrange],
-              ),
-              borderRadius: BorderRadius.circular(2),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFFF5E1E), // primary
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            "STREAMING SEKARANG",
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFFFF5E1E),
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        episode.title,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],

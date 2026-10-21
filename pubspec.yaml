@@ -71,6 +71,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/badges/
     - assets/images/
     - assets/images/logo.png
     - assets/images/wibu.png

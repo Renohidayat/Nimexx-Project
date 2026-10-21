@@ -5,6 +5,9 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../service/comment_service.dart';
+import 'rank_badge_widget.dart';
+import '../pages/public_profile_page.dart';
+import '../pages/profile_page.dart';
 
 class CommentSection extends StatefulWidget {
   final String episodeId;
@@ -24,7 +27,10 @@ class CommentSection extends StatefulWidget {
     required this.thumbUrl,
     this.highlightCommentId,
     this.onCommentCountChanged,
+    this.isDescending = true,
   });
+
+  final bool isDescending;
 
   @override
   State<CommentSection> createState() => _CommentSectionState();
@@ -51,7 +57,10 @@ class _CommentSectionState extends State<CommentSection>
   void initState() {
     super.initState();
 
-    _commentsStream = widget.commentService.getComments(widget.episodeId);
+    _commentsStream = widget.commentService.getComments(
+      widget.episodeId,
+      descending: widget.isDescending,
+    );
 
     _slideController = AnimationController(
       duration: const Duration(milliseconds: 300),
@@ -68,6 +77,20 @@ class _CommentSectionState extends State<CommentSection>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToHighlightedComment();
     });
+  }
+
+  @override
+  void didUpdateWidget(CommentSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isDescending != widget.isDescending ||
+        oldWidget.episodeId != widget.episodeId) {
+      setState(() {
+        _commentsStream = widget.commentService.getComments(
+          widget.episodeId,
+          descending: widget.isDescending,
+        );
+      });
+    }
   }
 
   void _scrollToHighlightedComment() {
@@ -99,57 +122,11 @@ class _CommentSectionState extends State<CommentSection>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader(screenWidth),
         _buildReplyInfo(screenWidth),
         _buildInputField(currentUser, screenWidth),
         SizedBox(height: screenWidth < 360 ? 12 : 20),
         _buildCommentsStream(currentUser, screenWidth),
       ],
-    );
-  }
-
-  Widget _buildSectionHeader(double screenWidth) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: screenWidth < 360 ? 12 : 16,
-        vertical: screenWidth < 360 ? 8 : 12,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
-        border: Border(
-          bottom: BorderSide(
-            color: const Color(0xFFFF6B35).withOpacity(0.2),
-            width: 1,
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(screenWidth < 360 ? 6 : 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFF6B35).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              Icons.chat_bubble_outline_rounded,
-              color: const Color(0xFFFF6B35),
-              size: screenWidth < 360 ? 18 : 20,
-            ),
-          ),
-          SizedBox(width: screenWidth < 360 ? 8 : 12),
-          Expanded(
-            child: Text(
-              'Komentar',
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontSize: screenWidth < 360 ? 14 : 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -226,93 +203,102 @@ class _CommentSectionState extends State<CommentSection>
 
   Widget _buildInputField(User? currentUser, double screenWidth) {
     return Container(
-      margin: EdgeInsets.symmetric(
-        horizontal: screenWidth < 360 ? 12 : 16,
-        vertical: screenWidth < 360 ? 6 : 8,
-      ),
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: const Color(0xFF0F1118),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF2A2A2A), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            spreadRadius: 1,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildProfileAvatar(
+            currentUser?.photoURL,
+            20,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxHeight: 100,
+                    ),
+                    child: TextField(
+                      controller:
+                          editingId == null ? _commentController : _editController,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                      ),
+                      maxLines: null,
+                      textInputAction: TextInputAction.newline,
+                      decoration: InputDecoration(
+                        hintText:
+                            editingId != null
+                                ? 'Edit komentar...'
+                                : replyingToUsername != null
+                                ? 'Balas @${replyingToUsername!}...'
+                                : 'Tulis komentar kamu untuk episode ini...',
+                        hintStyle: TextStyle(
+                          color: Colors.grey[500],
+                          fontSize: 14,
+                        ),
+                        filled: true,
+                        fillColor: const Color(0xFF1E293B).withOpacity(0.5), // bg-slate-900/50
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: const Color(0xFFFF5E1E).withOpacity(0.5)),
+                        ),
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFF5E1E),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFF5E1E).withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      )
+                    ]
+                  ),
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    icon: const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    onPressed: () => _submitComment(currentUser),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(screenWidth < 360 ? 8 : 12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            _buildProfileAvatar(
-              currentUser?.photoURL,
-              screenWidth < 360 ? 16 : 20,
-            ),
-            SizedBox(width: screenWidth < 360 ? 8 : 12),
-            Expanded(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: screenWidth < 360 ? 80 : 100,
-                ),
-                child: TextField(
-                  controller:
-                      editingId == null ? _commentController : _editController,
-                  style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: screenWidth < 360 ? 12 : 14,
-                  ),
-                  maxLines: null,
-                  textInputAction: TextInputAction.newline,
-                  decoration: InputDecoration(
-                    hintText:
-                        editingId != null
-                            ? 'Edit komentar...'
-                            : replyingToUsername != null
-                            ? 'Balas @${replyingToUsername!}...'
-                            : 'Tambahkan komentar...',
-                    hintStyle: GoogleFonts.poppins(
-                      color: const Color(0xFF666666),
-                      fontSize: screenWidth < 360 ? 12 : 14,
-                    ),
-                    filled: true,
-                    fillColor: const Color(0xFF0A0A0A),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: screenWidth < 360 ? 12 : 16,
-                      vertical: screenWidth < 360 ? 8 : 12,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    isDense: true,
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(width: screenWidth < 360 ? 6 : 8),
-            Container(
-              width: screenWidth < 360 ? 36 : 40,
-              height: screenWidth < 360 ? 36 : 40,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFF6B35),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: IconButton(
-                padding: EdgeInsets.zero,
-                icon: Icon(
-                  Icons.send_rounded,
-                  color: Colors.white,
-                  size: screenWidth < 360 ? 16 : 18,
-                ),
-                onPressed: () => _submitComment(currentUser),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -378,6 +364,14 @@ class _CommentSectionState extends State<CommentSection>
                       (c['data'] as Map<String, dynamic>)['parentId'] == null,
                 )
                 .toList();
+
+        mainComments.sort((a, b) {
+          final tA = (a['data'] as Map<String, dynamic>)['timestamp'] as Timestamp?;
+          final tB = (b['data'] as Map<String, dynamic>)['timestamp'] as Timestamp?;
+          if (tA == null) return -1;
+          if (tB == null) return 1;
+          return widget.isDescending ? tB.compareTo(tA) : tA.compareTo(tB);
+        });
 
         final replies =
             allComments
@@ -474,112 +468,160 @@ class _CommentSectionState extends State<CommentSection>
     return Container(
       key: key,
       margin: EdgeInsets.only(
-        left: isReply ? 0 : (screenWidth < 360 ? 12 : 16),
-        right: screenWidth < 360 ? 12 : 16,
-        bottom: screenWidth < 360 ? 8 : 12,
+        left: isReply ? (screenWidth < 360 ? 24 : 32) : 0,
+        bottom: 12,
       ),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color:
-            isHighlighted
-                ? const Color(0xFFFF6B35).withOpacity(0.1)
-                : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(screenWidth < 360 ? 12 : 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildProfileAvatar(
-                  data['photoURL'],
-                  screenWidth < 360 ? 16 : 18,
-                ),
-                SizedBox(width: screenWidth < 360 ? 8 : 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (isEditing)
-                        _buildEditField(commentId, data['content'], screenWidth)
-                      else
-                        _buildCommentContent(
-                          commentId,
-                          data['username'] ?? 'Anonim',
-                          data['content'],
-                          (data['timestamp'] as Timestamp?)?.toDate(),
-                          screenWidth,
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            if (!isEditing) ...[
-              SizedBox(height: screenWidth < 360 ? 8 : 12),
-              _buildActionButtons(commentId, data, currentUser, screenWidth),
-            ],
-            if (replies.isNotEmpty && !isReply)
-              _buildRepliesSection(replies, currentUser, screenWidth),
-          ],
+        color: const Color(0xFF0F1118).withOpacity(0.8), // bg-surface/80
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isHighlighted 
+            ? const Color(0xFFFF5E1E).withOpacity(0.5) 
+            : Colors.white.withOpacity(0.05),
         ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              GestureDetector(
+                onTap: () {
+                  final uid = data['uid'];
+                  if (uid != null && uid.isNotEmpty) {
+                    if (currentUser != null && currentUser.uid == uid) {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfilePage()));
+                    } else {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => PublicProfilePage(userId: uid)));
+                    }
+                  }
+                },
+                child: _buildProfileAvatar(
+                  data['photoURL'],
+                  18,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        final uid = data['uid'];
+                        if (uid != null && uid.isNotEmpty) {
+                          if (currentUser != null && currentUser.uid == uid) {
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfilePage()));
+                          } else {
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => PublicProfilePage(userId: uid)));
+                          }
+                        }
+                      },
+                      child: Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          // [Logo_Badge_Rank] [Teks_Level]
+                          RankBadgeWidget(
+                            rankCode: data['userBadge'] ?? 'E',
+                            level: (data['userLevel'] is int) ? data['userLevel'] : 1,
+                            compact: true,
+                          ),
+                          // [Nama_User]
+                          Text(
+                            '@${data['username'] ?? 'Anonim'}',
+                            style: GoogleFonts.outfit(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFFFF5E1E), // cyberOrange
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    if (data['timestamp'] != null)
+                      Text(
+                        timeago.format((data['timestamp'] as Timestamp).toDate(), locale: 'id'),
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (isEditing)
+            _buildEditField(commentId, data['content'], screenWidth)
+          else
+            Text(
+              data['content'] ?? '',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[200],
+                fontWeight: FontWeight.normal,
+              ),
+            ),
+          if (!isEditing) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.only(top: 8),
+              decoration: BoxDecoration(
+                border: Border(top: BorderSide(color: Colors.white.withOpacity(0.05))),
+              ),
+              child: _buildActionButtons(commentId, data, currentUser, screenWidth),
+            ),
+          ],
+          if (replies.isNotEmpty && !isReply)
+            _buildRepliesSection(replies, currentUser, screenWidth),
+        ],
       ),
     );
   }
 
   Widget _buildProfileAvatar(String? photoUrl, double radius) {
     return Container(
+      width: radius * 2,
+      height: radius * 2,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: const Color(0xFFFF6B35).withOpacity(0.3),
+          color: const Color(0xFFFF5E1E).withOpacity(0.4),
           width: 1,
         ),
+        color: const Color(0xFF1E293B), // slate-800
       ),
       child: ClipOval(
-        child:
-            photoUrl != null && photoUrl.isNotEmpty
-                ? CachedNetworkImage(
-                  imageUrl: photoUrl,
-                  width: radius * 2,
-                  height: radius * 2,
-                  fit: BoxFit.cover,
-                  placeholder:
-                      (context, url) => Container(
-                        width: radius * 2,
-                        height: radius * 2,
-                        color: const Color(0xFF2A2A2A),
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            color: const Color(0xFFFF6B35),
-                            strokeWidth: 1,
-                          ),
-                        ),
-                      ),
-                  errorWidget:
-                      (context, url, error) => Container(
-                        width: radius * 2,
-                        height: radius * 2,
-                        color: const Color(0xFF2A2A2A),
-                        child: Icon(
-                          Icons.person_rounded,
-                          size: radius,
-                          color: const Color(0xFFFF6B35),
-                        ),
-                      ),
-                )
-                : Container(
-                  width: radius * 2,
-                  height: radius * 2,
-                  color: const Color(0xFF2A2A2A),
-                  child: Icon(
-                    Icons.person_rounded,
-                    size: radius,
-                    color: const Color(0xFFFF6B35),
+        child: photoUrl != null && photoUrl.isNotEmpty
+            ? CachedNetworkImage(
+                imageUrl: photoUrl,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => const Center(
+                  child: SizedBox(
+                    width: 12, height: 12,
+                    child: CircularProgressIndicator(
+                      color: Color(0xFFFF5E1E),
+                      strokeWidth: 1.5,
+                    ),
                   ),
                 ),
+                errorWidget: (context, url, error) => Icon(
+                  Icons.person,
+                  size: radius,
+                  color: Colors.grey[400],
+                ),
+              )
+            : Icon(
+                Icons.person,
+                size: radius,
+                color: Colors.grey[400],
+              ),
       ),
     );
   }
@@ -675,50 +717,7 @@ class _CommentSectionState extends State<CommentSection>
     }
   }
 
-  Widget _buildCommentContent(
-    String commentId,
-    String username,
-    String content,
-    DateTime? timestamp,
-    double screenWidth,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Wrap(
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: 8,
-          children: [
-            Text(
-              '@$username',
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFFFF6B35),
-                fontSize: screenWidth < 360 ? 12 : 14,
-              ),
-            ),
-            if (timestamp != null)
-              Text(
-                timeago.format(timestamp, locale: 'id'),
-                style: GoogleFonts.poppins(
-                  fontSize: screenWidth < 360 ? 10 : 12,
-                  color: const Color(0xFF666666),
-                ),
-              ),
-          ],
-        ),
-        SizedBox(height: screenWidth < 360 ? 4 : 6),
-        Text(
-          content,
-          style: GoogleFonts.poppins(
-            color: Colors.white,
-            fontSize: screenWidth < 360 ? 12 : 14,
-            height: 1.4,
-          ),
-        ),
-      ],
-    );
-  }
+
 
   Widget _buildActionButtons(
     String commentId,
@@ -726,55 +725,59 @@ class _CommentSectionState extends State<CommentSection>
     User? currentUser,
     double screenWidth,
   ) {
-    return Wrap(
-      spacing: screenWidth < 360 ? 12 : 16,
-      runSpacing: screenWidth < 360 ? 4 : 8,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildActionButton(
-          icon: Icons.reply_rounded,
-          label: 'Balas',
-          color: const Color(0xFF666666),
-          screenWidth: screenWidth,
-          onTap: () {
-            setState(() {
-              replyingToId = data['parentId'] ?? commentId;
-              replyingToUsername = data['username'];
-              _commentController.text = '@${replyingToUsername!} ';
-              _commentController.selection = TextSelection.fromPosition(
-                TextPosition(offset: _commentController.text.length),
-              );
-            });
-            _slideController.forward();
-          },
+        Row(
+          children: [
+            _buildActionButton(
+              icon: Icons.reply,
+              label: 'Balas',
+              color: Colors.grey[400]!,
+              onTap: () {
+                setState(() {
+                  replyingToId = data['parentId'] ?? commentId;
+                  replyingToUsername = data['username'];
+                  _commentController.text = '@${replyingToUsername!} ';
+                  _commentController.selection = TextSelection.fromPosition(
+                    TextPosition(offset: _commentController.text.length),
+                  );
+                });
+                _slideController.forward();
+              },
+            ),
+            const SizedBox(width: 16),
+            _buildActionButton(
+              icon: Icons.flag,
+              label: 'Laporkan',
+              color: Colors.amber.withOpacity(0.8),
+              onTap: () => _reportComment(commentId, data),
+            ),
+          ],
         ),
-        _buildActionButton(
-          icon: Icons.flag_outlined,
-          label: 'Laporkan',
-          color: const Color(0xFFFFA500),
-          screenWidth: screenWidth,
-          onTap: () => _reportComment(commentId, data),
-        ),
-        if (currentUser?.uid == data['uid']) ...[
-          _buildActionButton(
-            icon: Icons.edit_outlined,
-            label: 'Edit',
-            color: const Color(0xFF666666),
-            screenWidth: screenWidth,
-            onTap: () {
-              setState(() {
-                editingId = commentId;
-                _editController.text = data['content'];
-              });
-            },
+        if (currentUser?.uid == data['uid'])
+          Row(
+            children: [
+              _buildActionButton(
+                icon: Icons.edit,
+                label: 'Edit',
+                color: Colors.grey[400]!,
+                onTap: () {
+                  setState(() {
+                    editingId = commentId;
+                    _editController.text = data['content'];
+                  });
+                },
+              ),
+              const SizedBox(width: 12),
+              _buildActionButton(
+                icon: Icons.delete,
+                label: 'Hapus',
+                color: Colors.red[400]!,
+                onTap: () => _deleteComment(commentId),
+              ),
+            ],
           ),
-          _buildActionButton(
-            icon: Icons.delete_outline_rounded,
-            label: 'Hapus',
-            color: const Color(0xFFFF4444),
-            screenWidth: screenWidth,
-            onTap: () => _deleteComment(commentId),
-          ),
-        ],
       ],
     );
   }
@@ -783,35 +786,24 @@ class _CommentSectionState extends State<CommentSection>
     required IconData icon,
     required String label,
     required Color color,
-    required double screenWidth,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: screenWidth < 360 ? 6 : 8,
-          vertical: screenWidth < 360 ? 4 : 6,
-        ),
-        decoration: BoxDecoration(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: screenWidth < 360 ? 12 : 14, color: color),
-            SizedBox(width: screenWidth < 360 ? 2 : 4),
-            Text(
-              label,
-              style: GoogleFonts.poppins(
-                fontSize: screenWidth < 360 ? 10 : 12,
-                color: color,
-                fontWeight: FontWeight.w500,
-              ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

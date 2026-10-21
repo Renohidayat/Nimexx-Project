@@ -49,4 +49,32 @@ class NotificationService {
       print('❌ Gagal mengirim notifikasi: $e');
     }
   }
+
+  Future<void> sendFriendRequestNotification(String targetUserId) async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null || targetUserId == currentUser.uid) return;
+
+    final String fromUsername = currentUser.displayName ?? 'Anonim';
+    final String fromPhotoUrl = currentUser.photoURL ?? '';
+
+    final Map<String, dynamic> notificationData = {
+      'type': 'friend_request',
+      'fromUserId': currentUser.uid,
+      'fromUsername': fromUsername,
+      'fromPhotoUrl': fromPhotoUrl,
+      'message': '$fromUsername mengirimkan permintaan pertemanan',
+      'timestamp': FieldValue.serverTimestamp(),
+      'read': false,
+    };
+
+    try {
+      await _firestore
+          .collection('users')
+          .doc(targetUserId)
+          .collection('notifications')
+          .add(notificationData);
+    } catch (e) {
+      print('❌ Gagal mengirim notifikasi pertemanan: $e');
+    }
+  }
 }
